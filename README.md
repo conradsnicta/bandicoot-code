@@ -10,6 +10,6 @@
 * Armadillo 7.800+ - http://arma.sourceforge.net
 
 
-**Developers**
+**Contact Authors**
 * Conrad Sanderson - http://conradsanderson.id.au
 * Ryan Curtin - http://www.ratml.org
