@@ -1,0 +1,207 @@
+// Copyright 2017 Conrad Sanderson (http://conradsanderson.id.au)
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ------------------------------------------------------------------------
+
+
+#ifndef BANDICOOT_INCLUDES
+#define BANDICOOT_INCLUDES
+
+
+#include <cstdlib>
+#include <cstring>
+#include <climits>
+#include <cmath>
+#include <ctime>
+#include <cstdio>
+
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <stdexcept>
+#include <new>
+#include <limits>
+#include <algorithm>
+#include <complex>
+#include <vector>
+#include <utility>
+
+
+#undef  CL_USE_DEPRECATED_OPENCL_1_2_APIS
+#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
+
+#if defined(__APPLE__)
+  #include <OpenCL/opencl.h>
+#else
+  #include <CL/opencl.h>
+#endif
+
+
+#if ( defined(__unix__) || defined(__unix) || defined(_POSIX_C_SOURCE) || (defined(__APPLE__) && defined(__MACH__)) ) && !defined(_WIN32)
+  #include <unistd.h>
+#endif
+
+
+#if (defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 200112L))
+  #include <sys/time.h>
+#endif
+
+
+// TODO: make this conditional on clBLAS being presents
+#include <clBLAS.h>
+
+
+#if (__cplusplus >= 201103L)
+  #undef  COOT_USE_CXX11
+  #define COOT_USE_CXX11
+#endif
+
+
+#include "bandicoot_bits/config.hpp"
+#include "bandicoot_bits/compiler_setup.hpp"
+
+
+#if defined(COOT_USE_CXX11)
+  #include <initializer_list>
+  #include <cstdint>
+  #include <random>
+  #include <functional>
+  #include <chrono>
+  #include <type_traits>
+  #include <mutex>
+#endif
+
+
+// stuff that is not in the coot namespace
+// #include "bandicoot_bits/.hpp"
+
+
+//! \namespace coot namespace for bandicoot classes and functions
+namespace coot
+  {
+  
+  // preliminaries
+  
+  #include "bandicoot_bits/coot_forward.hpp"
+  #include "bandicoot_bits/coot_static_check.hpp"
+  #include "bandicoot_bits/typedef_elem.hpp"
+  #include "bandicoot_bits/typedef_mat.hpp"
+  #include "bandicoot_bits/coot_str.hpp"
+  #include "bandicoot_bits/coot_version.hpp"
+  #include "bandicoot_bits/coot_config.hpp"
+  #include "bandicoot_bits/coot_clerror.hpp"
+  #include "bandicoot_bits/traits.hpp"
+  #include "bandicoot_bits/promote_type.hpp"
+  #include "bandicoot_bits/upgrade_val.hpp"
+  #include "bandicoot_bits/restrictors.hpp"
+  #include "bandicoot_bits/access.hpp"
+  #include "bandicoot_bits/span.hpp"
+  #include "bandicoot_bits/constants.hpp"
+  
+  //
+  // runtime
+  
+  #include "bandicoot_bits/kernel_id.hpp"
+  #include "bandicoot_bits/kernel_src.hpp"
+  #include "bandicoot_bits/coot_runtime_bones.hpp"
+  
+  //
+  // class prototypes
+  
+  #include "bandicoot_bits/cond_rel_bones.hpp"
+  
+  #include "bandicoot_bits/Base_bones.hpp"
+  
+  #include "bandicoot_bits/fakeMat_bones.hpp"
+  #include "bandicoot_bits/MatValProxy_bones.hpp"
+  #include "bandicoot_bits/Mat_bones.hpp"
+  
+  #include "bandicoot_bits/arrayops_bones.hpp"
+  #include "bandicoot_bits/eOp_bones.hpp"
+  #include "bandicoot_bits/eGlue_bones.hpp"
+  #include "bandicoot_bits/eop_core_bones.hpp"
+  #include "bandicoot_bits/eglue_core_bones.hpp"
+  
+  
+  //
+  // low-level debugging and memory handling functions
+  
+  #include "bandicoot_bits/debug.hpp"
+  #include "bandicoot_bits/cpu_memory.hpp"
+  
+  //
+  // wrappers for various cmath functions
+  
+  #include "bandicoot_bits/coot_cmath.hpp"
+  
+  
+  //
+  // runtime
+  
+  #include "bandicoot_bits/coot_runtime_meat.hpp"
+  
+  
+  //
+  // classes that underlay metaprogramming 
+  
+  #include "bandicoot_bits/unwrap.hpp"
+  
+  
+  
+  //
+  // ostream
+  
+  #include "bandicoot_bits/coot_ostream_bones.hpp"
+  #include "bandicoot_bits/coot_ostream_meat.hpp"
+  
+  //
+  // operators
+  
+  #include "bandicoot_bits/operator_times.hpp"
+  #include "bandicoot_bits/operator_plus.hpp"
+  #include "bandicoot_bits/operator_minus.hpp"
+  #include "bandicoot_bits/operator_schur.hpp"
+  #include "bandicoot_bits/operator_div.hpp"
+  //#include "bandicoot_bits/operator_ostream.hpp"
+  
+  //
+  // user accessible functions
+  
+  // the order of the fn_*.hpp include files matters,
+  // as some files require functionality given in preceding files
+  
+  #include "bandicoot_bits/fn_elem.hpp"
+  
+  
+  //
+  // class meat
+  
+  #include "bandicoot_bits/cond_rel_meat.hpp"
+  
+  #include "bandicoot_bits/Base_meat.hpp"
+  
+  #include "bandicoot_bits/fakeMat_meat.hpp"
+  #include "bandicoot_bits/MatValProxy_meat.hpp"
+  #include "bandicoot_bits/Mat_meat.hpp"
+  
+  #include "bandicoot_bits/arrayops_meat.hpp"
+  #include "bandicoot_bits/eOp_meat.hpp"
+  #include "bandicoot_bits/eGlue_meat.hpp"
+  #include "bandicoot_bits/eop_core_meat.hpp"
+  #include "bandicoot_bits/eglue_core_meat.hpp"
+  }
+
+
+
+#include "bandicoot_bits/compiler_setup_post.hpp"
+
+#endif

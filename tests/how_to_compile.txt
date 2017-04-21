@@ -1,0 +1,5 @@
+example:
+g++ prog.cpp -o prog -I /home/blah/git/bandicoot-code-unstable/include/ -O1 -lOpenCL -lclBLAS -larmadillo
+
+
+

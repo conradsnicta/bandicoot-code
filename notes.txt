@@ -1,0 +1,117 @@
+TODO
+
+handle 64 bit integers on GPU side
+if bcoot_64bit_word is enabled, use 64 bit integers on GPU side (if available)
+this will require making 2 versions of each kernel
+
+for functions such as extracting diagonals, there is no point in trying to do this in parallel
+can implement a kernel which is instantiated only once (ie. global_work_size = 1)
+which does a for-loop internally.
+
+overall summation:
+split the matrix into several even chunks.  what happens if the matrix size is odd?
+or, sum each column
+
+need to do an experiment to see if parallelisation helps
+approach 1: sum each column (colwise-sum) then sum the sums (vector sum, no parallelisation)
+vector sum kernel would do a for loop internally - ie. global_work_size is 1
+approach 2: call vector sum directly
+
+
+Mat::Mat(Mat&)        [done]
+Mat::operator=(Mat&)  [done]
+
+Mat::Mat(Mat&&)       [done]
+Mat::operator=(Mat&&) [done]
+
+need arrayops so code can be shared with Cube [done]
+Mat::operator+=(Mat&) [done]
+Mat::operator-=(Mat&) [done]
+Mat::operator*=(Mat&) [done]
+Mat::operator/=(Mat&) [done]
+
+need arrayops so code can be shared with Cube [done]
+Mat::operator= (scalar) [done]
+Mat::operator+=(scalar) [done]
+Mat::operator-=(scalar) [done]
+Mat::operator*=(scalar) [done]
+Mat::operator/=(scalar) [done]
+
+
+TODO: only a small subset of element-wise operations has been implemented;
+TODO: need to implement many unary math and trig functions
+Mat::operator= (eOp) [done]
+Mat::operator+=(eOp) [done]
+Mat::operator-=(eOp) [done]
+Mat::operator*=(eOp) 
+Mat::operator/=(eOp) [done]
+
+Mat::operator= (eGlue) [done]
+Mat::operator+=(eGlue) [done]
+Mat::operator-=(eGlue) [done]
+Mat::operator*=(eGlue) 
+Mat::operator/=(eGlue) [done]
+
+Mat::operator= (Glue) 
+Mat::operator+=(Glue) 
+Mat::operator-=(Glue) 
+Mat::operator*=(Glue) 
+Mat::operator/=(Glue) 
+
+Mat::operator= (Op) 
+Mat::operator+=(Op) 
+Mat::operator-=(Op) 
+Mat::operator*=(Op) 
+Mat::operator/=(Op) 
+
+Mat::submat()
+
+Mat::operator= (subview)
+Mat::operator+=(subview)
+Mat::operator-=(subview)
+Mat::operator*=(subview)
+Mat::operator/=(subview)
+
+Mat::diag()
+
+Mat::operator= (diagview)
+Mat::operator+=(diagview)
+Mat::operator-=(diagview)
+Mat::operator*=(diagview)
+Mat::operator/=(diagview)
+
+
+glue_times
+op_trans
+
+.is_vec()     [done]
+.is_colvec()  [done]
+.is_rowvec()  [done]
+.is_square()  [done]
+.is_empty()   [done]
+
+as_scalar()
+dot(A,B)  -> how to implement this efficiently?
+accu(X)
+
+sum(X,dim)
+min(X,dim)
+max(X,dim)
+
+zeros() [done]
+ones()  [done]
+eye()
+randu()
+randn()
+
+all()
+any()
+abs()
+
+norm()
+repmat()
+
+trans()
+trace()
+
+

@@ -1,0 +1,66 @@
+TODO: do we need the f_ prefix ?  ie. are all kernels in the global namespace within the GPU, or is each GPU program treated separately?
+
+http://www.openwall.com/lists/john-dev/2012/04/20/6
+https://www.khronos.org/registry/OpenCL/extensions/nv/cl_nv_pragma_unroll.txt
+TODO: add the following into the program:
+#ifdef cl_nv_pragma_unroll
+#pragma OPENCL EXTENSION cl_nv_pragma_unroll : enable
+#endif
+//
+see also  __attribute__((opencl_unroll_hint))
+https://community.amd.com/thread/170295
+For details, please refer the section "Specifying Attribute For Unrolling Loops" in OpenCL C Spec.
+http://stackoverflow.com/questions/13461403/is-there-a-way-to-unroll-loops-in-an-amd-opencl-kernel-with-the-compiler
+//
+TODO: is __attribute__((opencl_unroll_hint)) part of opencl 2.0 only ?
+https://www.khronos.org/registry/OpenCL/sdk/2.0/docs/man/xhtml/attributes-loopUnroll.html
+
+
+the bounds checks are required: "it is common to be forced to launch more threads than are needed and ignore the extras"
+https://www.olcf.ornl.gov/tutorials/opencl-vector-addition/
+from OpenCL 1.2 spec:
+If local_work_size is specified, the values specified in global_work_size[0],... global_work_size[work_dim - 1]
+must be evenly divisible by the corresponding values specified in local_work_size[0],... local_work_size[work_dim - 1].
+
+
+OpenCL 1.2 spec, section 6.8.k:
+Arguments to kernel functions in a program cannot be declared with the built-in scalar
+types bool, half, size_t, ptrdiff_t, intptr_t, and uintptr_t
+...
+The size in bytes of these types except half are implementation-defined and
+in addition can also be different for the OpenCL device and the host processor
+
+https://www.khronos.org/registry/OpenCL/sdk/1.2/docs/man/xhtml/scalarDataTypes.html
+
+  int = 32 bit signed integer
+ uint = unsigned int = 32 bit unsigned integer
+
+ long = 64 bit signed integer
+ulong = unsigned long = 64 bit unsigned integer
+
+ulong only useful if GPU has access to > 4 Gb and addressing is 64 bit
+//
+float  = always available
+double = available if GPU card supports it
+
+(1) possible approach:
+if host supports 64 bits, enable use of 64 bits (either manually or automatically via C++11)
+use kernels with ulong if the host supports 64 bit ints and device supports 64 bit ints
+
+NOTE: instead of passing start_row and start_col, can use get_global_offset(0) and get_global_offset(1);
+eg. get_global_id(0) + get_global_id(1)*get_global_size(0);
+size_t get_global_id (uint D)   = Global work-item ID value
+size_t get_global_size (uint D) = Number of global work-items
+size_t get_global_offset (uint D) Returns global offset
+
+
+opencl 1.2 spec, section 6.8.k:
+Arguments to kernel functions in a program cannot be declared with the built-in scalar
+types bool, size_t, ptrdiff_t, intptr_t, and uintptr_t or a struct and/or
+union that contain fields declared to be one of these built-in scalar types
+//
+is this a bug in the spec?  even though size_t on the device can be different to the host,
+specifying size_t on the kernel side indicates we are using the device's size_t, not the host's!
+
+
+
