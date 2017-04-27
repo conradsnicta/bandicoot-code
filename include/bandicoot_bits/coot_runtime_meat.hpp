@@ -63,6 +63,7 @@ coot_runtime_t::coot_runtime_t()
     typedef typename imat::elem_type i_type;
     
     // TODO: handle u_type
+    (void)u_type(0);
     
     status = init_kernels<i_type>(i_kernels, kernel_src::get_source(), kernel_id::get_names());
     if(status == false)  { coot_warn("coot_runtime: couldn't setup OpenCL kernels"); }
@@ -371,7 +372,7 @@ coot_runtime_t::interrogate_device(const bool print_details)
   // example: Clover from Mesa 13.0.4, running as AMD OLAND (DRM 2.48.0 / 4.9.14-200.fc25.x86_64, LLVM 3.9.1)
   
   const char* tmp_program_src = \
-    "__kernel void coot_interrogate(__global uint* out)\n"
+    "__kernel void coot_interrogate(__global uint* out) \n"
     "  {                                                \n"
     "  const size_t i = get_global_id(0);               \n"
     "  if(i == 0)                                       \n"
@@ -428,11 +429,19 @@ coot_runtime_t::interrogate_device(const bool print_details)
               get_stream_err1() << "OPENCL_VERSION: " << tmp_host_mem[2] << std::endl;
               }
             
-            const cl_ulong width = tmp_host_mem[0];
+            const cl_uint device_sizet_width = tmp_host_mem[0];
+            const cl_uint device_opencl_ver  = tmp_host_mem[2];
             
-            if( (width == 4) || (width == 8) )  { found_width = true; }
+            if( (device_sizet_width == 4) || (device_sizet_width == 8) )
+              {
+              found_width = true;
+              if(device_sizet_width == 8)  { (*this).device_64bit_sizet = true; }
+              }
             
-            if(width == 8)  { (*this).device_64bit_sizet = true; }
+            if(device_opencl_ver < 120)
+              {
+              coot_warn("device has OpenCL version lower than 1.2");
+              }
             }
           }
         }
@@ -770,7 +779,7 @@ coot_runtime_t::queue_guard::queue_guard()
   if(coot_runtime.is_valid())
     {
     coot_extra_debug_print("calling clFinish()");
-    clFinish(coot_runtime.get_queue());  // synchronise
+    clFinish(coot_runtime.get_queue());  // force synchronisation
     }
   }
 

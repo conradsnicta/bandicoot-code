@@ -24,10 +24,22 @@ struct kernel_id
     inplace_mul_scalar,
     inplace_div_scalar,
     //
+    submat_inplace_set_scalar,
+    submat_inplace_plus_scalar,
+    submat_inplace_minus_scalar,
+    submat_inplace_mul_scalar,
+    submat_inplace_div_scalar,
+    //
     inplace_plus_array,
     inplace_minus_array,
     inplace_mul_array,
     inplace_div_array,
+    //
+    submat_inplace_set_mat,
+    submat_inplace_plus_mat,
+    submat_inplace_minus_mat,
+    submat_inplace_schur_mat,
+    submat_inplace_div_mat,
     //
     equ_array_plus_scalar,
     equ_array_neg,
@@ -43,6 +55,8 @@ struct kernel_id
     equ_array_minus_array,
     equ_array_mul_array,
     equ_array_div_array,
+    //
+    inplace_set_eye,
     //
     sum_all,
     sum_colwise,
@@ -68,10 +82,22 @@ struct kernel_id
     names.push_back("inplace_mul_scalar");
     names.push_back("inplace_div_scalar");
     
+    names.push_back("submat_inplace_set_scalar");
+    names.push_back("submat_inplace_plus_scalar");
+    names.push_back("submat_inplace_minus_scalar");
+    names.push_back("submat_inplace_mul_scalar");
+    names.push_back("submat_inplace_div_scalar");
+    
     names.push_back("inplace_plus_array");
     names.push_back("inplace_minus_array");
     names.push_back("inplace_mul_array");
     names.push_back("inplace_div_array");
+    
+    names.push_back("submat_inplace_set_mat");
+    names.push_back("submat_inplace_plus_mat");
+    names.push_back("submat_inplace_minus_mat");
+    names.push_back("submat_inplace_schur_mat");
+    names.push_back("submat_inplace_div_mat");
     
     names.push_back("equ_array_plus_scalar");
     names.push_back("equ_array_neg");
@@ -88,6 +114,8 @@ struct kernel_id
     names.push_back("equ_array_mul_array");
     names.push_back("equ_array_div_array");
     
+    names.push_back("inplace_set_eye");
+
     names.push_back("sum_all");
     names.push_back("sum_colwise");
     names.push_back("sum_rowwise");

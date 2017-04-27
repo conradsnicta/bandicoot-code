@@ -18,64 +18,31 @@
 //! @{
 
 
-struct span_alt {};
+struct span_extra {};
 
 
 template<typename junk = int>
-class span_base
+struct span_base
   {
-  public:
-  static const span_alt all;
+  static const span_extra all;
   };
 
 
 template<typename junk>
-const span_alt span_base<junk>::all = span_alt();
+const span_extra span_base<junk>::all = span_extra();
 
 
-class span : public span_base<>
+struct span : public span_base<>
   {
-  public:
-
-  uword a;
-  uword b;
-  bool  whole;
+  coot_aligned uword a;
+  coot_aligned uword b;
+  coot_aligned bool  whole;
   
-  inline
-  span()
-    : whole(true)
-    {
-    }
+  inline span()                  : whole(true) {}
+  inline span(const span_extra&) : whole(true) {}
   
-  
-  inline
-  span(const span_alt&)
-    : whole(true)
-    {
-    }
-  
-  
-  inline
-  explicit
-  span(const uword in_a)
-    : a(in_a)
-    , b(in_a)
-    , whole(false)
-    {
-    }
-  
-  
-  // the "explicit" keyword is required here to prevent a C++11 compiler
-  // automatically converting {a,b} into an instance of span() when submatrices are specified
-  inline
-  explicit
-  span(const uword in_a, const uword in_b)
-    : a(in_a)
-    , b(in_b)
-    , whole(false)
-    {
-    }
-
+  inline explicit span(const uword in_a)                   : a(in_a), b(in_a), whole(false) {}
+  inline explicit span(const uword in_a, const uword in_b) : a(in_a), b(in_b), whole(false) {}
   };
 
 

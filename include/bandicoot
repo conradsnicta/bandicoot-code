@@ -124,6 +124,8 @@ namespace coot
   #include "bandicoot_bits/fakeMat_bones.hpp"
   #include "bandicoot_bits/MatValProxy_bones.hpp"
   #include "bandicoot_bits/Mat_bones.hpp"
+  #include "bandicoot_bits/SizeMat_bones.hpp"
+  #include "bandicoot_bits/subview_bones.hpp"
   
   #include "bandicoot_bits/arrayops_bones.hpp"
   #include "bandicoot_bits/eOp_bones.hpp"
@@ -131,6 +133,7 @@ namespace coot
   #include "bandicoot_bits/eop_core_bones.hpp"
   #include "bandicoot_bits/eglue_core_bones.hpp"
   
+  #include "bandicoot_bits/wall_clock_bones.hpp"
   
   //
   // low-level debugging and memory handling functions
@@ -192,12 +195,16 @@ namespace coot
   #include "bandicoot_bits/fakeMat_meat.hpp"
   #include "bandicoot_bits/MatValProxy_meat.hpp"
   #include "bandicoot_bits/Mat_meat.hpp"
+  #include "bandicoot_bits/SizeMat_meat.hpp"
+  #include "bandicoot_bits/subview_meat.hpp"
   
   #include "bandicoot_bits/arrayops_meat.hpp"
   #include "bandicoot_bits/eOp_meat.hpp"
   #include "bandicoot_bits/eGlue_meat.hpp"
   #include "bandicoot_bits/eop_core_meat.hpp"
   #include "bandicoot_bits/eglue_core_meat.hpp"
+  
+  #include "bandicoot_bits/wall_clock_meat.hpp"
   }
 
 

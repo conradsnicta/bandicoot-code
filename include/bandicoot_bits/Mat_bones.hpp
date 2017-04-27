@@ -76,6 +76,14 @@ class Mat : public Base< eT, Mat<eT> >
   
   inline void steal_mem(Mat& X);  //!< only for writing code internal to bandicoot
   
+  inline                   Mat(const subview<eT>& X);
+  inline const Mat& operator= (const subview<eT>& X);
+  inline const Mat& operator+=(const subview<eT>& X);
+  inline const Mat& operator-=(const subview<eT>& X);
+  inline const Mat& operator*=(const subview<eT>& X);
+  inline const Mat& operator%=(const subview<eT>& X);
+  inline const Mat& operator/=(const subview<eT>& X);
+  
   template<typename T1, typename eop_type> inline                   Mat(const eOp<T1, eop_type>& X);
   template<typename T1, typename eop_type> inline const Mat& operator= (const eOp<T1, eop_type>& X);
   template<typename T1, typename eop_type> inline const Mat& operator+=(const eOp<T1, eop_type>& X);
@@ -102,17 +110,20 @@ class Mat : public Base< eT, Mat<eT> >
   inline const Mat& ones(const uword new_n_elem);
   inline const Mat& ones(const uword new_n_rows, const uword new_n_cols);
   
+  inline const Mat& eye();
+  inline const Mat& eye(const uword new_n_rows, const uword new_n_cols);
+  
   inline void reset();
   inline void set_size(const uword new_n_elem);
   inline void set_size(const uword new_n_rows, const uword new_n_cols);
   
   inline void impl_print(const std::string extra_text) const;
   
-  coot_inline bool is_vec()    const;
-  coot_inline bool is_colvec() const;
-  coot_inline bool is_rowvec() const;
-  coot_inline bool is_square() const;
-  coot_inline bool is_empty()  const;
+  coot_warn_unused inline bool is_vec()    const;
+  coot_warn_unused inline bool is_colvec() const;
+  coot_warn_unused inline bool is_rowvec() const;
+  coot_warn_unused inline bool is_square() const;
+  coot_warn_unused inline bool is_empty()  const;
   
   coot_inline uword get_n_rows() const;
   coot_inline uword get_n_cols() const;
@@ -129,6 +140,60 @@ class Mat : public Base< eT, Mat<eT> >
   inline coot_warn_unused eT              at         (const uword in_row, const uword in_col) const;
   inline coot_warn_unused MatValProxy<eT> operator() (const uword in_row, const uword in_col);
   inline coot_warn_unused eT              operator() (const uword in_row, const uword in_col) const;
+  
+  coot_inline       subview_row<eT> row(const uword row_num);
+  coot_inline const subview_row<eT> row(const uword row_num) const;
+  
+  inline            subview_row<eT> operator()(const uword row_num, const span& col_span);
+  inline      const subview_row<eT> operator()(const uword row_num, const span& col_span) const;
+  
+  
+  coot_inline       subview_col<eT> col(const uword col_num);
+  coot_inline const subview_col<eT> col(const uword col_num) const;
+  
+  inline            subview_col<eT> operator()(const span& row_span, const uword col_num);
+  inline      const subview_col<eT> operator()(const span& row_span, const uword col_num) const;
+  
+  
+  coot_inline       subview<eT> rows(const uword in_row1, const uword in_row2);
+  coot_inline const subview<eT> rows(const uword in_row1, const uword in_row2) const;
+  
+  coot_inline       subview<eT> cols(const uword in_col1, const uword in_col2);
+  coot_inline const subview<eT> cols(const uword in_col1, const uword in_col2) const;
+  
+  inline            subview<eT> rows(const span& row_span);
+  inline      const subview<eT> rows(const span& row_span) const;
+  
+  coot_inline       subview<eT> cols(const span& col_span);
+  coot_inline const subview<eT> cols(const span& col_span) const;
+  
+  
+  coot_inline       subview<eT> submat(const uword in_row1, const uword in_col1, const uword in_row2, const uword in_col2);
+  coot_inline const subview<eT> submat(const uword in_row1, const uword in_col1, const uword in_row2, const uword in_col2) const;
+  
+  coot_inline       subview<eT> submat(const uword in_row1, const uword in_col1, const SizeMat& s);
+  coot_inline const subview<eT> submat(const uword in_row1, const uword in_col1, const SizeMat& s) const;
+  
+  inline            subview<eT> submat    (const span& row_span, const span& col_span);
+  inline      const subview<eT> submat    (const span& row_span, const span& col_span) const;
+  
+  inline            subview<eT> operator()(const span& row_span, const span& col_span);
+  inline      const subview<eT> operator()(const span& row_span, const span& col_span) const;
+  
+  inline            subview<eT> operator()(const uword in_row1, const uword in_col1, const SizeMat& s);
+  inline      const subview<eT> operator()(const uword in_row1, const uword in_col1, const SizeMat& s) const;
+  
+  inline       subview<eT> head_rows(const uword N);
+  inline const subview<eT> head_rows(const uword N) const;
+  
+  inline       subview<eT> tail_rows(const uword N);
+  inline const subview<eT> tail_rows(const uword N) const;
+  
+  inline       subview<eT> head_cols(const uword N);
+  inline const subview<eT> head_cols(const uword N) const;
+  
+  inline       subview<eT> tail_cols(const uword N);
+  inline const subview<eT> tail_cols(const uword N) const;
   
   inline void get_submatrix(Mat& X, const uword start_row, const uword start_col, const uword end_row, const uword end_col);  // BUG: for experimental purposes only
   inline void set_submatrix(Mat& X, const uword start_row, const uword start_col);  // BUG: for experimental purposes only
@@ -149,6 +214,7 @@ class Mat : public Base< eT, Mat<eT> >
   inline void cleanup();
   inline void init(const uword new_n_rows, const uword new_n_cols);
   
+  friend class subview<eT>;
 
   
   public:

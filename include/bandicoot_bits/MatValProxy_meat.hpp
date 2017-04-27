@@ -45,6 +45,8 @@ MatValProxy<eT>::get_val(const Mat<eT>& M, const uword index)
   {
   coot_extra_debug_sigprint();
   
+  coot_runtime_t::queue_guard guard;
+  
   coot_aligned cl_int status = 0;
   
   coot_aligned void* mapped_ptr = clEnqueueMapBuffer(coot_runtime.get_queue(), M.get_device_mem(), CL_TRUE, CL_MAP_READ, sizeof(eT)*index, sizeof(eT)*1, 0, NULL, NULL, &status);
@@ -58,7 +60,7 @@ MatValProxy<eT>::get_val(const Mat<eT>& M, const uword index)
     status = clEnqueueUnmapMemObject(coot_runtime.get_queue(), M.get_device_mem(), mapped_ptr, 0, NULL, NULL);
     }
   
-  coot_check_runtime_error( (status != CL_SUCCESS), "MatValProxy: couldn't read from device memory" );
+  coot_check_runtime_error( (status != CL_SUCCESS), "MatValProxy: couldn't access device memory" );
   
   return val;
   
@@ -92,6 +94,8 @@ MatValProxy<eT>::operator=(const eT in_val)
   {
   coot_extra_debug_sigprint();
   
+  coot_runtime_t::queue_guard guard;
+  
   coot_aligned cl_int status = 0;
   
   coot_aligned void* mapped_ptr = clEnqueueMapBuffer(coot_runtime.get_queue(), M.get_device_mem(), CL_TRUE, CL_MAP_WRITE, sizeof(eT)*index, sizeof(eT)*1, 0, NULL, NULL, &status);
@@ -114,6 +118,8 @@ void
 MatValProxy<eT>::operator+=(const eT in_val)
   {
   coot_extra_debug_sigprint();
+  
+  coot_runtime_t::queue_guard guard;
   
   coot_aligned cl_int status = 0;
   
@@ -138,6 +144,8 @@ MatValProxy<eT>::operator-=(const eT in_val)
   {
   coot_extra_debug_sigprint();
   
+  coot_runtime_t::queue_guard guard;
+  
   coot_aligned cl_int status = 0;
   
   coot_aligned void* mapped_ptr = clEnqueueMapBuffer(coot_runtime.get_queue(), M.get_device_mem(), CL_TRUE, (CL_MAP_READ | CL_MAP_WRITE), sizeof(eT)*index, sizeof(eT)*1, 0, NULL, NULL, &status);
@@ -160,6 +168,8 @@ void
 MatValProxy<eT>::operator*=(const eT in_val)
   {
   coot_extra_debug_sigprint();
+  
+  coot_runtime_t::queue_guard guard;
   
   coot_aligned cl_int status = 0;
   
@@ -184,6 +194,8 @@ void
 MatValProxy<eT>::operator/=(const eT in_val)
   {
   coot_extra_debug_sigprint();
+  
+  coot_runtime_t::queue_guard guard;
   
   coot_aligned cl_int status = 0;
   

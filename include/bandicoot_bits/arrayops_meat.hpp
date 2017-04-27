@@ -27,6 +27,8 @@ arrayops::copy(cl_mem dest, cl_mem src, const uword n_elem)
   
   coot_runtime_t::queue_guard guard;
   
+  coot_extra_debug_print("clEnqueueCopyBuffer()");
+  
   cl_int status = clEnqueueCopyBuffer(coot_runtime.get_queue(), src, dest, size_t(0), size_t(0), sizeof(eT)*size_t(n_elem), cl_uint(0), NULL, NULL);
   
   coot_check_runtime_error( (status != 0), "arrayops::copy(): couldn't copy buffer" );
@@ -51,9 +53,11 @@ arrayops::inplace_op_scalar(cl_mem dest, const eT val, const uword n_elem, cl_ke
   status |= clSetKernelArg(kernel, 1, sizeof(eT),     &val  );
   status |= clSetKernelArg(kernel, 2, N.size,         N.addr);
   
-  size_t global_work_size = size_t(n_elem);
+  const size_t global_work_size[1] = { size_t(n_elem) };
   
-  status |= clEnqueueNDRangeKernel(coot_runtime.get_queue(), kernel, 1, NULL, &global_work_size, NULL, 0, NULL, NULL);
+  coot_extra_debug_print("clEnqueueNDRangeKernel()");
+  
+  status |= clEnqueueNDRangeKernel(coot_runtime.get_queue(), kernel, 1, NULL, global_work_size, NULL, 0, NULL, NULL);
   
   coot_check_runtime_error( (status != 0), "arrayops::inplace_op_scalar(): couldn't execute kernel" );
   }
@@ -150,9 +154,11 @@ arrayops::inplace_op_array(cl_mem dest, cl_mem src, const uword n_elem, cl_kerne
   status |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &src   );
   status |= clSetKernelArg(kernel, 2, N.size,          N.addr);
   
-  size_t global_work_size = size_t(n_elem);
+  const size_t global_work_size[1] = { size_t(n_elem) };
   
-  status |= clEnqueueNDRangeKernel(coot_runtime.get_queue(), kernel, 1, NULL, &global_work_size, NULL, 0, NULL, NULL);
+  coot_extra_debug_print("clEnqueueNDRangeKernel()");
+  
+  status |= clEnqueueNDRangeKernel(coot_runtime.get_queue(), kernel, 1, NULL, global_work_size, NULL, 0, NULL, NULL);
   
   coot_check_runtime_error( (status != 0), "arrayops::inplace_op_array(): couldn't execute kernel" );
   }

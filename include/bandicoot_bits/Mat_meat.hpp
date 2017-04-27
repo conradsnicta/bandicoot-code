@@ -23,6 +23,8 @@ Mat<eT>::~Mat()
   {
   coot_extra_debug_sigprint_this(this);
   
+  coot_runtime_t::queue_guard guard;  // force synchronisation, in case there are any pending commands
+  
   cleanup();
   
   coot_type_check(( is_supported_elem_type<eT>::value == false ));
@@ -99,8 +101,6 @@ Mat<eT>::read_device_mem(eT* dest_memptr, const uword N) const
   {
   coot_extra_debug_sigprint();
   
-  // TODO: move this function to a separate class, so it can be shared with the Cube class
-  
   if( (n_elem == 0) || (N == 0) )  { return; }
   
   coot_runtime_t::queue_guard guard;
@@ -110,7 +110,7 @@ Mat<eT>::read_device_mem(eT* dest_memptr, const uword N) const
   // use a blocking call
   cl_int status = clEnqueueReadBuffer(coot_runtime.get_queue(), device_mem, CL_TRUE, 0, sizeof(eT)*n_elem_mod, dest_memptr, 0, NULL, NULL);
   
-  coot_check_runtime_error( (status != CL_SUCCESS), "Mat::read_device_mem(): couldn't read from device memory" );
+  coot_check_runtime_error( (status != CL_SUCCESS), "Mat::read_device_mem(): couldn't access device memory" );
   }
 
 
@@ -122,8 +122,6 @@ Mat<eT>::write_device_mem(const eT* src_memptr, const uword N)
   {
   coot_extra_debug_sigprint();
   
-  // TODO: move this function to a separate class, so it can be shared with the Cube class
-  
   if( (n_elem == 0) || (N == 0) )  { return; }
   
   coot_runtime_t::queue_guard guard;
@@ -133,7 +131,7 @@ Mat<eT>::write_device_mem(const eT* src_memptr, const uword N)
   // use a blocking call
   cl_int status = clEnqueueWriteBuffer(coot_runtime.get_queue(), device_mem, CL_TRUE, 0, sizeof(eT)*n_elem_mod, src_memptr, 0, NULL, NULL);
   
-  coot_check_runtime_error( (status != CL_SUCCESS), "Mat::read_device_mem(): couldn't write to device memory" );
+  coot_check_runtime_error( (status != CL_SUCCESS), "Mat::write_device_mem(): couldn't access device memory" );
   }
 
 
@@ -145,7 +143,7 @@ Mat<eT>::cleanup()
   {
   coot_extra_debug_sigprint();
   
-  if((mem_state == 0) && (n_elem > 0) && (device_mem != NULL))
+  if((device_mem != NULL) && (mem_state == 0) && (n_elem > 0))
     {
     coot_runtime.release_memory(device_mem);
     }
@@ -457,6 +455,125 @@ Mat<eT>::steal_mem(Mat<eT>& X)
 
 
 template<typename eT>
+inline
+Mat<eT>::Mat(const subview<eT>& X)
+  : n_rows   (0)
+  , n_cols   (0)
+  , n_elem   (0)
+  , vec_state(0)
+  , mem_state(0)
+  {
+  coot_extra_debug_sigprint_this(this);
+  
+  (*this).operator=(X);
+  }
+
+
+
+template<typename eT>
+inline
+const Mat<eT>&
+Mat<eT>::operator=(const subview<eT>& X)
+  {
+  coot_extra_debug_sigprint();
+  
+  const bool alias = (this == &(X.m));
+  
+  if(alias == false)
+    {
+    set_size(X.n_rows, X.n_cols);
+    
+    subview<eT>::extract(*this, X);
+    }
+  else
+    {
+    Mat<eT> tmp(X);
+    
+    steal_mem(tmp);
+    }
+  
+  return *this;
+  }
+
+
+template<typename eT>
+inline
+const Mat<eT>&
+Mat<eT>::operator+=(const subview<eT>& X)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_assert_same_size(n_rows, n_cols, X.n_rows, X.n_cols, "Mat::operator+=");
+  
+  subview<eT>::plus_inplace(*this, X);
+  
+  return *this;
+  }
+
+
+template<typename eT>
+inline
+const Mat<eT>&
+Mat<eT>::operator-=(const subview<eT>& X)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_assert_same_size(n_rows, n_cols, X.n_rows, X.n_cols, "Mat::operator-=");
+  
+  subview<eT>::minus_inplace(*this, X);
+  
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
+const Mat<eT>&
+Mat<eT>::operator*=(const subview<eT>& X)
+  {
+  coot_extra_debug_sigprint();
+  
+  // TODO
+  
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
+const Mat<eT>&
+Mat<eT>::operator%=(const subview<eT>& X)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_assert_same_size(n_rows, n_cols, X.n_rows, X.n_cols, "Mat::operator%=");
+  
+  subview<eT>::schur_inplace(*this, X);
+  
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
+const Mat<eT>&
+Mat<eT>::operator/=(const subview<eT>& X)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_assert_same_size(n_rows, n_cols, X.n_rows, X.n_cols, "Mat::operator/=");
+  
+  subview<eT>::div_inplace(*this, X);
+  
+  return *this;
+  }
+
+
+
+template<typename eT>
 template<typename T1, typename eop_type>
 inline
 Mat<eT>::Mat(const eOp<T1, eop_type>& X)
@@ -483,7 +600,7 @@ Mat<eT>::operator=(const eOp<T1, eop_type>& X)
   
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
   
-  // eop_core currently uses unwrap to convert submatrices to separate standard matrices,
+  // eop_core currently forcefully unwraps submatrices to matrices,
   // so currently there can't be dangerous aliasing with the out matrix
   
   set_size(X.get_n_rows(), X.get_n_cols());
@@ -614,7 +731,7 @@ Mat<eT>::operator=(const eGlue<T1, T2, eglue_type>& X)
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
   coot_type_check(( is_same_type< eT, typename T2::elem_type >::no ));
   
-  // eglue_core currently uses unwrap to convert submatrices to separate standard matrices,
+  // eglue_core currently forcefully unwraps submatrices to matrices,
   // so currently there can't be dangerous aliasing with the out matrix
   
   set_size(X.get_n_rows(), X.get_n_cols());
@@ -825,6 +942,52 @@ Mat<eT>::ones(const uword new_n_rows, const uword new_n_cols)
 
 template<typename eT>
 inline
+const Mat<eT>&
+Mat<eT>::eye()
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_runtime_t::queue_guard guard;
+  
+  coot_runtime_t::adapt_val local_n_rows(n_rows);
+  coot_runtime_t::adapt_val local_n_cols(n_cols);
+  
+  cl_kernel kernel = coot_runtime.get_kernel<eT>(kernel_id::inplace_set_eye);
+  
+  cl_int status = 0;
+  
+  status |= clSetKernelArg(kernel, 0, sizeof(cl_mem),    &device_mem      );
+  status |= clSetKernelArg(kernel, 1, local_n_rows.size, local_n_rows.addr);
+  status |= clSetKernelArg(kernel, 2, local_n_cols.size, local_n_cols.addr);
+  
+  const size_t global_work_size[2] = { size_t(n_rows), size_t(n_cols) };
+  
+  status |= clEnqueueNDRangeKernel(coot_runtime.get_queue(), kernel, 2, NULL, global_work_size, NULL, 0, NULL, NULL);
+  
+  coot_check_runtime_error( (status != 0), "Mat::eye(): couldn't execute kernel" );
+  
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
+const Mat<eT>&
+Mat<eT>::eye(const uword new_n_rows, const uword new_n_cols)
+  {
+  coot_extra_debug_sigprint();
+  
+  (*this).set_size(new_n_rows, new_n_cols);
+  (*this).eye();
+  
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
 void
 Mat<eT>::reset()
   {
@@ -905,7 +1068,8 @@ Mat<eT>::impl_print(const std::string extra_text) const
 
 
 template<typename eT>
-coot_inline
+coot_warn_unused
+inline
 bool
 Mat<eT>::is_vec() const
   {
@@ -915,7 +1079,8 @@ Mat<eT>::is_vec() const
 
 
 template<typename eT>
-coot_inline
+coot_warn_unused
+inline
 bool
 Mat<eT>::is_colvec() const
   {
@@ -925,7 +1090,8 @@ Mat<eT>::is_colvec() const
 
 
 template<typename eT>
-coot_inline
+coot_warn_unused
+inline
 bool
 Mat<eT>::is_rowvec() const
   {
@@ -935,7 +1101,8 @@ Mat<eT>::is_rowvec() const
 
 
 template<typename eT>
-coot_inline
+coot_warn_unused
+inline
 bool
 Mat<eT>::is_square() const
   {
@@ -945,11 +1112,12 @@ Mat<eT>::is_square() const
 
 
 template<typename eT>
-coot_inline
+coot_warn_unused
+inline
 bool
 Mat<eT>::is_empty() const
   {
-  return (n_elem == uword(0));
+  return (n_elem == 0);
   }
 
 
@@ -984,7 +1152,7 @@ Mat<eT>::get_n_elem() const
 
 
 
-//! linear element accessor; this is very slow - do not use it unless absolutely necessary
+//! linear element accessor without bounds check; this is very slow - do not use it unless absolutely necessary
 template<typename eT>
 coot_inline
 coot_warn_unused
@@ -1027,14 +1195,12 @@ coot_warn_unused
 eT
 Mat<eT>::at(const uword ii) const
   {
-  coot_debug_check( (ii >= n_elem), "Mat::operator(): index out of bounds");
-  
   return MatValProxy<eT>::get_val(*this, ii);
   }
 
 
 
-//! linear element accessor without bounds check; this is very slow - do not use it unless absolutely necessary
+//! linear element accessor with bounds check; this is very slow - do not use it unless absolutely necessary
 template<typename eT>
 coot_inline
 coot_warn_unused
@@ -1048,7 +1214,7 @@ Mat<eT>::operator() (const uword ii)
 
 
 
-//! linear element accessor; this is very slow - do not use it unless absolutely necessary
+//! linear element accessor with bounds check; this is very slow - do not use it unless absolutely necessary
 template<typename eT>
 coot_inline
 coot_warn_unused
@@ -1068,8 +1234,6 @@ coot_warn_unused
 MatValProxy<eT>
 Mat<eT>::at(const uword in_row, const uword in_col)
   {
-  coot_debug_check( ((in_row >= n_rows) || (in_col >= n_cols)), "Mat::operator(): index out of bounds");
-  
   return MatValProxy<eT>(*this, (in_row + in_col*n_rows));
   }
 
@@ -1081,8 +1245,6 @@ coot_warn_unused
 eT
 Mat<eT>::at(const uword in_row, const uword in_col) const
   {
-  coot_debug_check( ((in_row >= n_rows) || (in_col >= n_cols)), "Mat::operator(): index out of bounds");
-
   return MatValProxy<eT>::get_val(*this, (in_row + in_col*n_rows));
   }
 
@@ -1110,6 +1272,694 @@ Mat<eT>::operator() (const uword in_row, const uword in_col) const
   coot_debug_check( ((in_row >= n_rows) || (in_col >= n_cols)), "Mat::operator(): index out of bounds");
   
   return MatValProxy<eT>::get_val(*this, (in_row + in_col*n_rows));
+  }
+
+
+
+template<typename eT>
+coot_inline
+subview_row<eT>
+Mat<eT>::row(const uword row_num)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_check( row_num >= n_rows, "Mat::row(): index out of bounds" );
+  
+  return subview_row<eT>(*this, row_num);
+  }
+
+
+
+template<typename eT>
+coot_inline
+const subview_row<eT>
+Mat<eT>::row(const uword row_num) const
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_check( row_num >= n_rows, "Mat::row(): index out of bounds" );
+  
+  return subview_row<eT>(*this, row_num);
+  }
+
+
+
+template<typename eT>
+inline
+subview_row<eT>
+Mat<eT>::operator()(const uword row_num, const span& col_span)
+  {
+  coot_extra_debug_sigprint();
+  
+  const bool col_all = col_span.whole;
+  
+  const uword local_n_cols = n_cols;
+  
+  const uword in_col1       = col_all ? 0            : col_span.a;
+  const uword in_col2       =                          col_span.b;
+  const uword submat_n_cols = col_all ? local_n_cols : in_col2 - in_col1 + 1;
+  
+  coot_debug_check
+    (
+    (row_num >= n_rows)
+    ||
+    ( col_all ? false : ((in_col1 > in_col2) || (in_col2 >= local_n_cols)) )
+    ,
+    "Mat::operator(): indices out of bounds or incorrectly used"
+    );
+  
+  return subview_row<eT>(*this, row_num, in_col1, submat_n_cols);
+  }
+
+
+
+template<typename eT>
+inline
+const subview_row<eT>
+Mat<eT>::operator()(const uword row_num, const span& col_span) const
+  {
+  coot_extra_debug_sigprint();
+  
+  const bool col_all = col_span.whole;
+  
+  const uword local_n_cols = n_cols;
+  
+  const uword in_col1       = col_all ? 0            : col_span.a;
+  const uword in_col2       =                          col_span.b;
+  const uword submat_n_cols = col_all ? local_n_cols : in_col2 - in_col1 + 1;
+  
+  coot_debug_check
+    (
+    (row_num >= n_rows)
+    ||
+    ( col_all ? false : ((in_col1 > in_col2) || (in_col2 >= local_n_cols)) )
+    ,
+    "Mat::operator(): indices out of bounds or incorrectly used"
+    );
+  
+  return subview_row<eT>(*this, row_num, in_col1, submat_n_cols);
+  }
+
+
+
+template<typename eT>
+coot_inline
+subview_col<eT>
+Mat<eT>::col(const uword col_num)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_check( col_num >= n_cols, "Mat::col(): index out of bounds");
+  
+  return subview_col<eT>(*this, col_num);
+  }
+
+
+
+template<typename eT>
+coot_inline
+const subview_col<eT>
+Mat<eT>::col(const uword col_num) const
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_check( col_num >= n_cols, "Mat::col(): index out of bounds");
+  
+  return subview_col<eT>(*this, col_num);
+  }
+
+
+
+template<typename eT>
+inline
+subview_col<eT>
+Mat<eT>::operator()(const span& row_span, const uword col_num)
+  {
+  coot_extra_debug_sigprint();
+  
+  const bool row_all = row_span.whole;
+  
+  const uword local_n_rows = n_rows;
+  
+  const uword in_row1       = row_all ? 0            : row_span.a;
+  const uword in_row2       =                          row_span.b;
+  const uword submat_n_rows = row_all ? local_n_rows : in_row2 - in_row1 + 1;
+  
+  coot_debug_check
+    (
+    (col_num >= n_cols)
+    ||
+    ( row_all ? false : ((in_row1 > in_row2) || (in_row2 >= local_n_rows)) )
+    ,
+    "Mat::operator(): indices out of bounds or incorrectly used"
+    );
+  
+  return subview_col<eT>(*this, col_num, in_row1, submat_n_rows);
+  }
+
+
+
+template<typename eT>
+inline
+const subview_col<eT>
+Mat<eT>::operator()(const span& row_span, const uword col_num) const
+  {
+  coot_extra_debug_sigprint();
+  
+  const bool row_all = row_span.whole;
+  
+  const uword local_n_rows = n_rows;
+  
+  const uword in_row1       = row_all ? 0            : row_span.a;
+  const uword in_row2       =                          row_span.b;
+  const uword submat_n_rows = row_all ? local_n_rows : in_row2 - in_row1 + 1;
+  
+  coot_debug_check
+    (
+    (col_num >= n_cols)
+    ||
+    ( row_all ? false : ((in_row1 > in_row2) || (in_row2 >= local_n_rows)) )
+    ,
+    "Mat::operator(): indices out of bounds or incorrectly used"
+    );
+  
+  return subview_col<eT>(*this, col_num, in_row1, submat_n_rows);
+  }
+
+
+
+template<typename eT>
+coot_inline
+subview<eT>
+Mat<eT>::rows(const uword in_row1, const uword in_row2)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_check
+    (
+    (in_row1 > in_row2) || (in_row2 >= n_rows),
+    "Mat::rows(): indices out of bounds or incorrectly used"
+    );
+  
+  const uword subview_n_rows = in_row2 - in_row1 + 1;
+  
+  return subview<eT>(*this, in_row1, 0, subview_n_rows, n_cols );
+  }
+
+
+
+template<typename eT>
+coot_inline
+const subview<eT>
+Mat<eT>::rows(const uword in_row1, const uword in_row2) const
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_check
+    (
+    (in_row1 > in_row2) || (in_row2 >= n_rows),
+    "Mat::rows(): indices out of bounds or incorrectly used"
+    );
+  
+  const uword subview_n_rows = in_row2 - in_row1 + 1;
+  
+  return subview<eT>(*this, in_row1, 0, subview_n_rows, n_cols );
+  }
+
+
+
+template<typename eT>
+coot_inline
+subview<eT>
+Mat<eT>::cols(const uword in_col1, const uword in_col2)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_check
+    (
+    (in_col1 > in_col2) || (in_col2 >= n_cols),
+    "Mat::cols(): indices out of bounds or incorrectly used"
+    );
+  
+  const uword subview_n_cols = in_col2 - in_col1 + 1;
+  
+  return subview<eT>(*this, 0, in_col1, n_rows, subview_n_cols);
+  }
+
+
+
+template<typename eT>
+coot_inline
+const subview<eT>
+Mat<eT>::cols(const uword in_col1, const uword in_col2) const
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_check
+    (
+    (in_col1 > in_col2) || (in_col2 >= n_cols),
+    "Mat::cols(): indices out of bounds or incorrectly used"
+    );
+  
+  const uword subview_n_cols = in_col2 - in_col1 + 1;
+  
+  return subview<eT>(*this, 0, in_col1, n_rows, subview_n_cols);
+  }
+
+
+
+template<typename eT>
+inline
+subview<eT>
+Mat<eT>::rows(const span& row_span)
+  {
+  coot_extra_debug_sigprint();
+  
+  const bool row_all = row_span.whole;
+  
+  const uword local_n_rows = n_rows;
+  
+  const uword in_row1       = row_all ? 0            : row_span.a;
+  const uword in_row2       =                          row_span.b;
+  const uword submat_n_rows = row_all ? local_n_rows : in_row2 - in_row1 + 1;
+  
+  coot_debug_check
+    (
+    ( row_all ? false : ((in_row1 > in_row2) || (in_row2 >= local_n_rows)) )
+    ,
+    "Mat::rows(): indices out of bounds or incorrectly used"
+    );
+  
+  return subview<eT>(*this, in_row1, 0, submat_n_rows, n_cols);
+  }
+
+
+
+template<typename eT>
+inline
+const subview<eT>
+Mat<eT>::rows(const span& row_span) const
+  {
+  coot_extra_debug_sigprint();
+  
+  const bool row_all = row_span.whole;
+  
+  const uword local_n_rows = n_rows;
+  
+  const uword in_row1       = row_all ? 0            : row_span.a;
+  const uword in_row2       =                          row_span.b;
+  const uword submat_n_rows = row_all ? local_n_rows : in_row2 - in_row1 + 1;
+  
+  coot_debug_check
+    (
+    ( row_all ? false : ((in_row1 > in_row2) || (in_row2 >= local_n_rows)) )
+    ,
+    "Mat::rows(): indices out of bounds or incorrectly used"
+    );
+  
+  return subview<eT>(*this, in_row1, 0, submat_n_rows, n_cols);
+  }
+
+
+
+template<typename eT>
+coot_inline
+subview<eT>
+Mat<eT>::cols(const span& col_span)
+  {
+  coot_extra_debug_sigprint();
+  
+  const bool col_all = col_span.whole;
+  
+  const uword local_n_cols = n_cols;
+  
+  const uword in_col1       = col_all ? 0            : col_span.a;
+  const uword in_col2       =                          col_span.b;
+  const uword submat_n_cols = col_all ? local_n_cols : in_col2 - in_col1 + 1;
+  
+  coot_debug_check
+    (
+    ( col_all ? false : ((in_col1 > in_col2) || (in_col2 >= local_n_cols)) )
+    ,
+    "Mat::cols(): indices out of bounds or incorrectly used"
+    );
+  
+  return subview<eT>(*this, 0, in_col1, n_rows, submat_n_cols);
+  }
+
+
+
+template<typename eT>
+coot_inline
+const subview<eT>
+Mat<eT>::cols(const span& col_span) const
+  {
+  coot_extra_debug_sigprint();
+  
+  const bool col_all = col_span.whole;
+  
+  const uword local_n_cols = n_cols;
+  
+  const uword in_col1       = col_all ? 0            : col_span.a;
+  const uword in_col2       =                          col_span.b;
+  const uword submat_n_cols = col_all ? local_n_cols : in_col2 - in_col1 + 1;
+  
+  coot_debug_check
+    (
+    ( col_all ? false : ((in_col1 > in_col2) || (in_col2 >= local_n_cols)) )
+    ,
+    "Mat::cols(): indices out of bounds or incorrectly used"
+    );
+  
+  return subview<eT>(*this, 0, in_col1, n_rows, submat_n_cols);
+  }
+
+
+
+template<typename eT>
+coot_inline
+subview<eT>
+Mat<eT>::submat(const uword in_row1, const uword in_col1, const uword in_row2, const uword in_col2)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_check
+    (
+    (in_row1 > in_row2) || (in_col1 >  in_col2) || (in_row2 >= n_rows) || (in_col2 >= n_cols),
+    "Mat::submat(): indices out of bounds or incorrectly used"
+    );
+  
+  const uword subview_n_rows = in_row2 - in_row1 + 1;
+  const uword subview_n_cols = in_col2 - in_col1 + 1;
+  
+  return subview<eT>(*this, in_row1, in_col1, subview_n_rows, subview_n_cols);
+  }
+
+
+
+template<typename eT>
+coot_inline
+const subview<eT>
+Mat<eT>::submat(const uword in_row1, const uword in_col1, const uword in_row2, const uword in_col2) const
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_check
+    (
+    (in_row1 > in_row2) || (in_col1 >  in_col2) || (in_row2 >= n_rows) || (in_col2 >= n_cols),
+    "Mat::submat(): indices out of bounds or incorrectly used"
+    );
+    
+  const uword subview_n_rows = in_row2 - in_row1 + 1;
+  const uword subview_n_cols = in_col2 - in_col1 + 1;
+  
+  return subview<eT>(*this, in_row1, in_col1, subview_n_rows, subview_n_cols);
+  }
+
+
+
+template<typename eT>
+coot_inline
+subview<eT>
+Mat<eT>::submat(const uword in_row1, const uword in_col1, const SizeMat& s)
+  {
+  coot_extra_debug_sigprint();
+  
+  const uword l_n_rows = n_rows;
+  const uword l_n_cols = n_cols;
+  
+  const uword s_n_rows = s.n_rows;
+  const uword s_n_cols = s.n_cols;
+  
+  coot_debug_check
+    (
+    ((in_row1 >= l_n_rows) || (in_col1 >= l_n_cols) || ((in_row1 + s_n_rows) > l_n_rows) || ((in_col1 + s_n_cols) > l_n_cols)),
+    "Mat::submat(): indices or size out of bounds"
+    );
+  
+  return subview<eT>(*this, in_row1, in_col1, s_n_rows, s_n_cols);
+  }
+
+
+
+template<typename eT>
+coot_inline
+const subview<eT>
+Mat<eT>::submat(const uword in_row1, const uword in_col1, const SizeMat& s) const
+  {
+  coot_extra_debug_sigprint();
+  
+  const uword l_n_rows = n_rows;
+  const uword l_n_cols = n_cols;
+  
+  const uword s_n_rows = s.n_rows;
+  const uword s_n_cols = s.n_cols;
+  
+  coot_debug_check
+    (
+    ((in_row1 >= l_n_rows) || (in_col1 >= l_n_cols) || ((in_row1 + s_n_rows) > l_n_rows) || ((in_col1 + s_n_cols) > l_n_cols)),
+    "Mat::submat(): indices or size out of bounds"
+    );
+  
+  return subview<eT>(*this, in_row1, in_col1, s_n_rows, s_n_cols);
+  }
+
+
+
+template<typename eT>
+inline
+subview<eT>
+Mat<eT>::submat(const span& row_span, const span& col_span)
+  {
+  coot_extra_debug_sigprint();
+  
+  const bool row_all = row_span.whole;
+  const bool col_all = col_span.whole;
+  
+  const uword local_n_rows = n_rows;
+  const uword local_n_cols = n_cols;
+  
+  const uword in_row1       = row_all ? 0            : row_span.a;
+  const uword in_row2       =                          row_span.b;
+  const uword submat_n_rows = row_all ? local_n_rows : in_row2 - in_row1 + 1;
+  
+  const uword in_col1       = col_all ? 0            : col_span.a;
+  const uword in_col2       =                          col_span.b;
+  const uword submat_n_cols = col_all ? local_n_cols : in_col2 - in_col1 + 1;
+  
+  coot_debug_check
+    (
+    ( row_all ? false : ((in_row1 > in_row2) || (in_row2 >= local_n_rows)) )
+    ||
+    ( col_all ? false : ((in_col1 > in_col2) || (in_col2 >= local_n_cols)) )
+    ,
+    "Mat::submat(): indices out of bounds or incorrectly used"
+    );
+  
+  return subview<eT>(*this, in_row1, in_col1, submat_n_rows, submat_n_cols);
+  }
+
+
+
+template<typename eT>
+inline
+const subview<eT>
+Mat<eT>::submat(const span& row_span, const span& col_span) const
+  {
+  coot_extra_debug_sigprint();
+  
+  const bool row_all = row_span.whole;
+  const bool col_all = col_span.whole;
+  
+  const uword local_n_rows = n_rows;
+  const uword local_n_cols = n_cols;
+  
+  const uword in_row1       = row_all ? 0            : row_span.a;
+  const uword in_row2       =                          row_span.b;
+  const uword submat_n_rows = row_all ? local_n_rows : in_row2 - in_row1 + 1;
+  
+  const uword in_col1       = col_all ? 0            : col_span.a;
+  const uword in_col2       =                          col_span.b;
+  const uword submat_n_cols = col_all ? local_n_cols : in_col2 - in_col1 + 1;
+  
+  coot_debug_check
+    (
+    ( row_all ? false : ((in_row1 > in_row2) || (in_row2 >= local_n_rows)) )
+    ||
+    ( col_all ? false : ((in_col1 > in_col2) || (in_col2 >= local_n_cols)) )
+    ,
+    "Mat::submat(): indices out of bounds or incorrectly used"
+    );
+  
+  return subview<eT>(*this, in_row1, in_col1, submat_n_rows, submat_n_cols);
+  }
+
+
+
+template<typename eT>
+inline
+subview<eT>
+Mat<eT>::operator()(const span& row_span, const span& col_span)
+  {
+  coot_extra_debug_sigprint();
+  
+  return (*this).submat(row_span, col_span);
+  }
+
+
+
+template<typename eT>
+inline
+const subview<eT>
+Mat<eT>::operator()(const span& row_span, const span& col_span) const
+  {
+  coot_extra_debug_sigprint();
+  
+  return (*this).submat(row_span, col_span);
+  }
+
+
+
+template<typename eT>
+inline
+subview<eT>
+Mat<eT>::operator()(const uword in_row1, const uword in_col1, const SizeMat& s)
+  {
+  coot_extra_debug_sigprint();
+  
+  return (*this).submat(in_row1, in_col1, s);
+  }
+
+
+
+template<typename eT>
+inline
+const subview<eT>
+Mat<eT>::operator()(const uword in_row1, const uword in_col1, const SizeMat& s) const
+  {
+  coot_extra_debug_sigprint();
+  
+  return (*this).submat(in_row1, in_col1, s);
+  }
+
+
+
+template<typename eT>
+inline
+subview<eT>
+Mat<eT>::head_rows(const uword N)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_check( (N > n_rows), "Mat::head_rows(): size out of bounds");
+  
+  return subview<eT>(*this, 0, 0, N, n_cols);
+  }
+
+
+
+template<typename eT>
+inline
+const subview<eT>
+Mat<eT>::head_rows(const uword N) const
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_check( (N > n_rows), "Mat::head_rows(): size out of bounds");
+  
+  return subview<eT>(*this, 0, 0, N, n_cols);
+  }
+
+
+
+template<typename eT>
+inline
+subview<eT>
+Mat<eT>::tail_rows(const uword N)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_check( (N > n_rows), "Mat::tail_rows(): size out of bounds");
+  
+  const uword start_row = n_rows - N;
+  
+  return subview<eT>(*this, start_row, 0, N, n_cols);
+  }
+
+
+
+template<typename eT>
+inline
+const subview<eT>
+Mat<eT>::tail_rows(const uword N) const
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_check( (N > n_rows), "Mat::tail_rows(): size out of bounds");
+  
+  const uword start_row = n_rows - N;
+  
+  return subview<eT>(*this, start_row, 0, N, n_cols);
+  }
+
+
+
+template<typename eT>
+inline
+subview<eT>
+Mat<eT>::head_cols(const uword N)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_check( (N > n_cols), "Mat::head_cols(): size out of bounds");
+  
+  return subview<eT>(*this, 0, 0, n_rows, N);
+  }
+
+
+
+template<typename eT>
+inline
+const subview<eT>
+Mat<eT>::head_cols(const uword N) const
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_check( (N > n_cols), "Mat::head_cols(): size out of bounds");
+  
+  return subview<eT>(*this, 0, 0, n_rows, N);
+  }
+
+
+
+template<typename eT>
+inline
+subview<eT>
+Mat<eT>::tail_cols(const uword N)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_check( (N > n_cols), "Mat::tail_cols(): size out of bounds");
+  
+  const uword start_col = n_cols - N;
+  
+  return subview<eT>(*this, 0, start_col, n_rows, N);
+  }
+
+
+
+template<typename eT>
+inline
+const subview<eT>
+Mat<eT>::tail_cols(const uword N) const
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_check( (N > n_cols), "Mat::tail_cols(): size out of bounds");
+  
+  const uword start_col = n_cols - N;
+  
+  return subview<eT>(*this, 0, start_col, n_rows, N);
   }
 
 
