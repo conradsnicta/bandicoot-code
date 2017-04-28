@@ -649,6 +649,16 @@ subview<eT>::div_inplace(Mat<eT>& out, const subview<eT>& in)
 
 
 template<typename eT>
+coot_inline
+uword
+subview_col<eT>::get_n_cols() const
+  {
+  return uword(1);
+  }
+
+
+
+template<typename eT>
 inline
 subview_col<eT>::subview_col(const Mat<eT>& in_m, const uword in_col)
   : subview<eT>(in_m, 0, in_col, in_m.n_rows, 1)
@@ -719,6 +729,16 @@ subview_col<eT>::operator=(const Base<eT,T1>& X)
 
 //
 // subview_row
+
+
+template<typename eT>
+coot_inline
+uword
+subview_row<eT>::get_n_rows() const
+  {
+  return uword(1);
+  }
+
 
 
 template<typename eT>

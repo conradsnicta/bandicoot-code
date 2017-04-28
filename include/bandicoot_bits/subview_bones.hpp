@@ -109,6 +109,8 @@ class subview_col : public subview<eT>
   static const bool is_row = false;
   static const bool is_col = true;
   
+  coot_inline uword get_n_cols() const;
+
   inline void operator= (const subview<eT>& x);
   inline void operator= (const subview_col& x);
   inline void operator= (const eT val);
@@ -144,6 +146,8 @@ class subview_row : public subview<eT>
   
   static const bool is_row = true;
   static const bool is_col = false;
+  
+  coot_inline uword get_n_rows() const;
   
   inline void operator= (const subview<eT>& x);
   inline void operator= (const subview_row& x);

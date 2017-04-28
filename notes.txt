@@ -69,7 +69,7 @@ Mat::submat() [done]
 Mat::operator= (subview) [done]
 Mat::operator+=(subview) [done]
 Mat::operator-=(subview) [done]
-Mat::operator*=(subview) [done]
+Mat::operator*=(subview) 
 Mat::operator/=(subview) [done]
 
 subview_col
