@@ -58,6 +58,9 @@ struct kernel_id
     //
     inplace_set_eye,
     //
+    get_diag,
+    trace,
+    //
     sum_all,
     sum_colwise,
     sum_rowwise,
@@ -115,7 +118,10 @@ struct kernel_id
     names.push_back("equ_array_div_array");
     
     names.push_back("inplace_set_eye");
-
+    
+    names.push_back("get_diag");
+    names.push_back("trace");
+    
     names.push_back("sum_all");
     names.push_back("sum_colwise");
     names.push_back("sum_rowwise");

@@ -64,13 +64,16 @@ Mat::operator-=(Op)
 Mat::operator*=(Op) 
 Mat::operator/=(Op) 
 
-Mat::submat()
+Mat::submat() [done]
 
-Mat::operator= (subview)
-Mat::operator+=(subview)
-Mat::operator-=(subview)
-Mat::operator*=(subview)
-Mat::operator/=(subview)
+Mat::operator= (subview) [done]
+Mat::operator+=(subview) [done]
+Mat::operator-=(subview) [done]
+Mat::operator*=(subview) [done]
+Mat::operator/=(subview) [done]
+
+subview_col
+subview_row
 
 Mat::diag()
 
@@ -81,8 +84,7 @@ Mat::operator*=(diagview)
 Mat::operator/=(diagview)
 
 
-glue_times
-op_trans
+
 
 .is_vec()     [done]
 .is_colvec()  [done]
@@ -90,9 +92,17 @@ op_trans
 .is_square()  [done]
 .is_empty()   [done]
 
-as_scalar()
+
+glue_times -> requires Glue
+
+trans() -> requires Op
+op_trans
+
+as_scalar() [done]
+accu()
+trace()     [done]
+
 dot(A,B)  -> how to implement this efficiently?
-accu(X)
 
 sum(X,dim)
 min(X,dim)
@@ -100,7 +110,7 @@ max(X,dim)
 
 zeros() [done]
 ones()  [done]
-eye()
+eye()   [done]
 randu()
 randn()
 
@@ -111,7 +121,8 @@ abs()
 norm()
 repmat()
 
-trans()
-trace()
 
+
+
+TODO: get a list of most used functions used by mlpack
 

@@ -32,6 +32,9 @@ struct unwrap
     }
   
   const Mat<eT> M;
+  
+  template<typename eT2>
+  coot_inline bool is_alias(const Mat<eT2>&) const { return false; }
   };
 
 
@@ -49,6 +52,9 @@ struct unwrap< Mat<eT> >
     }
   
   const Mat<eT>& M;
+  
+  template<typename eT2>
+  coot_inline bool is_alias(const Mat<eT2>& X) const { return (void_ptr(&M) == void_ptr(&X)); }
   };
 
 
@@ -66,6 +72,9 @@ struct unwrap< Row<eT> >
     }
   
   const Row<eT>& M;
+  
+  template<typename eT2>
+  coot_inline bool is_alias(const Mat<eT2>& X) const { return (void_ptr(&M) == void_ptr(&X)); }
   };
 
 
@@ -83,6 +92,9 @@ struct unwrap< Col<eT> >
     }
   
   const Col<eT>& M;
+  
+  template<typename eT2>
+  coot_inline bool is_alias(const Mat<eT2>& X) const { return (void_ptr(&M) == void_ptr(&X)); }
   };
 
 
@@ -100,6 +112,9 @@ struct unwrap< mtGlue<out_eT, T1, T2, glue_type> >
     }
   
   const Mat<out_eT> M;
+  
+  template<typename eT2>
+  coot_inline bool is_alias(const Mat<eT2>&) const { return false; }
   };
 
 
@@ -117,6 +132,9 @@ struct unwrap< mtOp<out_eT, T1, op_type> >
     }
   
   const Mat<out_eT> M;
+  
+  template<typename eT2>
+  coot_inline bool is_alias(const Mat<eT2>&) const { return false; }
   };
 
 

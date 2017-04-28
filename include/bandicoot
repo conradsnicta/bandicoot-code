@@ -182,7 +182,9 @@ namespace coot
   // the order of the fn_*.hpp include files matters,
   // as some files require functionality given in preceding files
   
+  #include "bandicoot_bits/fn_as_scalar.hpp"
   #include "bandicoot_bits/fn_elem.hpp"
+  #include "bandicoot_bits/fn_trace.hpp"
   
   
   //

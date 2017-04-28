@@ -17,12 +17,44 @@
 //! @{
 
 
+
+template<typename eT>
+coot_inline
+uword
+subview<eT>::get_n_rows() const
+  {
+  return n_rows;
+  }
+
+
+
+template<typename eT>
+coot_inline
+uword
+subview<eT>::get_n_cols() const
+  {
+  return n_cols;
+  }
+
+
+
+template<typename eT>
+coot_inline
+uword
+subview<eT>::get_n_elem() const
+  {
+  return n_elem;
+  }
+
+
+
 template<typename eT>
 inline
 subview<eT>::~subview()
   {
   coot_extra_debug_sigprint();
   }
+
 
 
 template<typename eT>

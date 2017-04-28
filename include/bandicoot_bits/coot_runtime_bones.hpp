@@ -45,7 +45,7 @@ class coot_runtime_t
   coot_aligned bool device_64bit_float;
   
   #if defined(COOT_USE_CXX11)
-  coot_aligned std::mutex mutex;
+  coot_aligned std::recursive_mutex mutex;
   #endif
   
   inline void   lock();  //! NOTE: do not call this function directly; instead instantiate the cq_guard class inside a relevant scope

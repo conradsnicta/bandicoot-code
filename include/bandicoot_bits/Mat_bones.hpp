@@ -50,7 +50,8 @@ class Mat : public Base< eT, Mat<eT> >
   
   inline Mat(cl_mem aux_device_mem, const uword in_rows, const uword in_cols);
   
-  inline cl_mem get_device_mem() const;  // TODO: should this be private?
+  inline cl_mem get_device_mem()         const;
+  inline cl_mem get_device_mem_no_sync() const;
   
   inline void  read_device_mem(      eT* dest_memptr, const uword N) const;
   inline void write_device_mem(const eT*  src_memptr, const uword N);

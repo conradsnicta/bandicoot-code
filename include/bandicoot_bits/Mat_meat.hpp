@@ -96,6 +96,18 @@ Mat<eT>::get_device_mem() const
 
 template<typename eT>
 inline
+cl_mem
+Mat<eT>::get_device_mem_no_sync() const
+  {
+  coot_extra_debug_sigprint();
+  
+  return device_mem;
+  }
+
+
+
+template<typename eT>
+inline
 void
 Mat<eT>::read_device_mem(eT* dest_memptr, const uword N) const
   {

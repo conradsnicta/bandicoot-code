@@ -38,6 +38,7 @@ coot_runtime_t::coot_runtime_t()
   device_64bit_sizet = false;
   device_64bit_float = false;
   
+  
   bool status = false;
   
   std::string errmsg;

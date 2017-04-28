@@ -1,8 +1,6 @@
 #include <iostream>
 #include <bandicoot>
 
-#include <armadillo>
-
 using namespace std;
 using namespace coot;
 

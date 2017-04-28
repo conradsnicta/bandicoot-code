@@ -98,6 +98,53 @@ struct is_Col< const Col<eT> >
   { static const bool value = true; };
 
 
+
+//
+//
+//
+
+
+
+template<typename T>
+struct is_subview
+  { static const bool value = false; };
+
+template<typename eT>
+struct is_subview< subview<eT> >
+  { static const bool value = true; };
+
+template<typename eT>
+struct is_subview< const subview<eT> >
+  { static const bool value = true; };
+
+
+template<typename T>
+struct is_subview_row
+  { static const bool value = false; };
+
+template<typename eT>
+struct is_subview_row< subview_row<eT> >
+  { static const bool value = true; };
+
+template<typename eT>
+struct is_subview_row< const subview_row<eT> >
+  { static const bool value = true; };
+
+
+template<typename T>
+struct is_subview_col
+  { static const bool value = false; };
+
+template<typename eT>
+struct is_subview_col< subview_col<eT> >
+  { static const bool value = true; };
+
+template<typename eT>
+struct is_subview_col< const subview_col<eT> >
+  { static const bool value = true; };
+
+
+
 //
 //
 //
@@ -296,6 +343,7 @@ struct is_coot_type
   || is_eGlue<T1>::value
   || is_mtOp<T1>::value
   || is_mtGlue<T1>::value
+  || is_subview<T1>::value
   ;
   };
 
@@ -313,6 +361,7 @@ struct is_coot_cube_type
   || is_GlueCube<T1>::value
   || is_eGlueCube<T1>::value
   || is_mtGlueCube<T1>::value
+  // TODO: subview_cube
   ;
   };
 

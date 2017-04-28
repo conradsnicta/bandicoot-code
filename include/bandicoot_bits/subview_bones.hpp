@@ -37,6 +37,11 @@ class subview : public Base<eT, subview<eT> >
   const uword n_cols;
   const uword n_elem;
   
+  coot_inline uword get_n_rows() const;
+  coot_inline uword get_n_cols() const;
+  coot_inline uword get_n_elem() const;
+  
+  
   protected:
   
   coot_inline subview(const Mat<eT>& in_m, const uword in_row1, const uword in_col1, const uword in_n_rows, const uword in_n_cols);
