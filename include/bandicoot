@@ -98,7 +98,7 @@ namespace coot
   #include "bandicoot_bits/coot_str.hpp"
   #include "bandicoot_bits/coot_version.hpp"
   #include "bandicoot_bits/coot_config.hpp"
-  #include "bandicoot_bits/coot_clerror.hpp"
+  #include "bandicoot_bits/coot_cl_error.hpp"
   #include "bandicoot_bits/traits.hpp"
   #include "bandicoot_bits/promote_type.hpp"
   #include "bandicoot_bits/upgrade_val.hpp"
