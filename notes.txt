@@ -72,10 +72,14 @@ Mat::operator-=(subview) [done]
 Mat::operator*=(subview) 
 Mat::operator/=(subview) [done]
 
+.col()
 subview_col
+
+.row()
 subview_row
 
-Mat::diag()
+.diag()
+diagview
 
 Mat::operator= (diagview)
 Mat::operator+=(diagview)
@@ -95,8 +99,17 @@ Mat::operator/=(diagview)
 
 glue_times -> requires Glue
 
-trans() -> requires Op
+
 op_trans
+trans() -> requires Op
+.t()
+.st()
+.ht()
+
+.min()
+.max()
+.index_min()
+.index_max()
 
 as_scalar() [done]
 accu()
@@ -108,9 +121,15 @@ sum(X,dim)
 min(X,dim)
 max(X,dim)
 
-zeros() [done]
-ones()  [done]
-eye()   [done]
+.zeros() [done]
+.ones()  [done]
+.eye()   [done]
+standalone zeros()
+standalone ones()
+standalone eye()
+
+
+
 randu()
 randn()
 
@@ -121,6 +140,11 @@ abs()
 norm()
 repmat()
 
+log()
+clamp()
+diagmat()
+diagvec()
+vectorise()
 
 
 
