@@ -1,5 +1,5 @@
 **About**
-* Bandicoot is C++ a library for linear algebra for GPUs, interfacing OpenCL / CUDA
+* Bandicoot is C++ a linear algebra library for GPUs, interfacing OpenCL / CUDA
 * Bandicoot aims to provide the same API and syntax as the [Armadillo library](http://arma.sourceforge.net), but using matrices and vectors stored in GPU accessible memory
 * Bandicoot is currently a **work-in-progress** and hence currently only for experimental use
 <br>
