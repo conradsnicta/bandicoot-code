@@ -396,7 +396,7 @@ coot_check_cl_error(const cl_int error_code, const T1& x)
   {
   if(error_code != CL_SUCCESS)
     {
-    coot_stop_runtime_error( x, coot_clerror::as_string(error_code) );
+    coot_stop_runtime_error( x, coot_cl_error::as_string(error_code) );
     }
   }
 

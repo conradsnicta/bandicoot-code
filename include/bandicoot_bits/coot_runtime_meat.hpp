@@ -32,7 +32,7 @@ coot_runtime_t::coot_runtime_t()
   platform_id = NULL;
   device_id   = NULL;
   context     = NULL;
-  queue       = NULL;
+  cq          = NULL;
   
   valid              = false;
   device_64bit_sizet = false;
@@ -42,7 +42,7 @@ coot_runtime_t::coot_runtime_t()
   
   std::string errmsg;
   
-  status = init_cl(errmsg, true, 0, 0);
+  status = init_cl(errmsg, false, 0, 0);
   
   if(status == false)
     {
@@ -52,20 +52,20 @@ coot_runtime_t::coot_runtime_t()
     coot_warn(ss.str());
     }
   
-
   interrogate_device(true);
-  
-  
   
   if(status != false)
     {
-    typedef typename umat::elem_type u_type;
-    typedef typename imat::elem_type i_type;
+    status = init_kernels<u32>(u32_kernels, kernel_src::get_source(), kernel_id::get_names());
+    if(status == false)  { coot_warn("coot_runtime: couldn't setup OpenCL kernels"); }
     
-    // TODO: handle u_type
-    (void)u_type(0);
+    status = init_kernels<s32>(s32_kernels, kernel_src::get_source(), kernel_id::get_names());
+    if(status == false)  { coot_warn("coot_runtime: couldn't setup OpenCL kernels"); }
     
-    status = init_kernels<i_type>(i_kernels, kernel_src::get_source(), kernel_id::get_names());
+    status = init_kernels<u32>(u64_kernels, kernel_src::get_source(), kernel_id::get_names());
+    if(status == false)  { coot_warn("coot_runtime: couldn't setup OpenCL kernels"); }
+    
+    status = init_kernels<s32>(s64_kernels, kernel_src::get_source(), kernel_id::get_names());
     if(status == false)  { coot_warn("coot_runtime: couldn't setup OpenCL kernels"); }
     
     status = init_kernels<float>(f_kernels, kernel_src::get_source(), kernel_id::get_names());
@@ -135,7 +135,7 @@ coot_runtime_t::cleanup_cl()
   
   valid = false;
   
-  if(queue != NULL)  { clFinish(queue); }
+  if(cq != NULL)  { clFinish(cq); }
   
   clblasTeardown();  // TODO: make this conditional on clBLAS being available
   
@@ -145,8 +145,8 @@ coot_runtime_t::cleanup_cl()
   
   for(uword i=0; i<f_kernels_size; ++i)  { if(f_kernels.at(i) != NULL)  { clReleaseKernel(f_kernels.at(i)); } }
   
-  if(queue    != NULL)  { clReleaseCommandQueue(queue); queue   = NULL; }
-  if(context  != NULL)  { clReleaseContext(context);    context = NULL; }
+  if(cq      != NULL)  { clReleaseCommandQueue(cq); cq      = NULL; }
+  if(context != NULL)  { clReleaseContext(context); context = NULL; }
   }
 
 
@@ -182,9 +182,9 @@ coot_runtime_t::init_cl(std::string& out_errmsg, const bool manual_selection, co
   // go through each platform
   
   std::vector< std::vector<cl_device_id> > device_ids(n_platforms);
-  std::vector< std::vector<uword       > > device_pri(n_platforms);  // device priorities
+  std::vector< std::vector<int         > > device_pri(n_platforms);  // device priorities
   
-  for(cl_uint platform_count = 0; platform_count < n_platforms; ++platform_count)
+  for(size_t platform_count = 0; platform_count < n_platforms; ++platform_count)
     {
     cl_platform_id tmp_platform_id = platform_ids.at(platform_count);
     
@@ -198,7 +198,7 @@ coot_runtime_t::init_cl(std::string& out_errmsg, const bool manual_selection, co
       }
     
     std::vector<cl_device_id>& local_device_ids = device_ids.at(platform_count);
-    std::vector<uword>&        local_device_pri = device_pri.at(platform_count);
+    std::vector<int>&          local_device_pri = device_pri.at(platform_count);
     
     local_device_ids.resize(local_n_devices);
     local_device_pri.resize(local_n_devices);
@@ -206,7 +206,7 @@ coot_runtime_t::init_cl(std::string& out_errmsg, const bool manual_selection, co
     status = clGetDeviceIDs(tmp_platform_id, CL_DEVICE_TYPE_ALL, local_n_devices, &(local_device_ids[0]), NULL);
     
     // go through each device on this platform
-    for(cl_uint local_device_count = 0; local_device_count < local_n_devices; ++local_device_count)
+    for(size_t local_device_count = 0; local_device_count < local_n_devices; ++local_device_count)
       {
       local_device_pri.at(local_device_count) = 0;
       
@@ -215,10 +215,13 @@ coot_runtime_t::init_cl(std::string& out_errmsg, const bool manual_selection, co
       cl_device_type      device_type_val = 0;
       cl_device_fp_config device_fp64_val = 0;
       
+      char device_vstr[1024];
+      
       status = 0;
       
       status |= clGetDeviceInfo(local_device_id, CL_DEVICE_TYPE,             sizeof(cl_device_type),      &device_type_val, NULL);
       status |= clGetDeviceInfo(local_device_id, CL_DEVICE_DOUBLE_FP_CONFIG, sizeof(cl_device_fp_config), &device_fp64_val, NULL);
+      status |= clGetDeviceInfo(local_device_id, CL_DEVICE_VERSION,          sizeof(device_vstr),         &device_vstr,     NULL);
       
       if(status != CL_SUCCESS)
         {
@@ -226,10 +229,45 @@ coot_runtime_t::init_cl(std::string& out_errmsg, const bool manual_selection, co
         return false;
         }
       
+      // extract OpenCL version
+      device_vstr[ sizeof(device_vstr)-1 ] = char(0);  // ensure the array is null terminated
+      const std::string tmp_str(device_vstr);
+      
+      // find the gaps in the version string, in case each version number becomes more than one digit
+      
+      std::string::size_type skip = tmp_str.find_first_of(" ");  // skip "OpenCL" at the start
+      
+      std::string::size_type major_ver_start = tmp_str.find_first_not_of(" ", skip           );
+      std::string::size_type major_ver_end   = tmp_str.find_first_of    (".", major_ver_start);
+      std::string::size_type minor_ver_start = tmp_str.find_first_not_of(".", major_ver_end  );
+      std::string::size_type minor_ver_end   = tmp_str.find_first_of    (" ", minor_ver_start);
+      
+      if( (skip == std::string::npos) || (major_ver_start == std::string::npos) || (major_ver_end == std::string::npos) || (minor_ver_end == std::string::npos) )
+        {
+        out_errmsg = "device has garbled OpenCL version string";
+        return false;
+        }
+      
+      major_ver_end--;
+      minor_ver_end--;
+      
+      std::istringstream major_ver_ss( tmp_str.substr(major_ver_start, major_ver_end - major_ver_start + 1) );
+      std::istringstream minor_ver_ss( tmp_str.substr(minor_ver_start, minor_ver_end - minor_ver_start + 1) );
+      
+      uword major_ver = 0;
+      uword minor_ver = 0;
+      
+      major_ver_ss >> major_ver;
+      minor_ver_ss >> minor_ver;
+      
+      const bool device_ver_ok = ( (major_ver >= 2) || ( (major_ver >= 1) && (minor_ver >= 2) ) );
+      
       // prefer GPUs over CPUs and other devices
       // prefer devices with 64 bit float support
-      if(device_type_val == CL_DEVICE_TYPE_GPU)  { local_device_pri.at(local_device_count) += 2; }
-      if(device_fp64_val != 0                 )  { local_device_pri.at(local_device_count) += 1; }
+      // prefer devices with OpenCL 1.2 or greater
+      if(device_type_val == CL_DEVICE_TYPE_GPU)  { local_device_pri.at(local_device_count) +=  2; }
+      if(device_fp64_val != 0                 )  { local_device_pri.at(local_device_count) +=  1; }
+      if(device_ver_ok   == false             )  { local_device_pri.at(local_device_count)  = -1; }
       }
     }
   
@@ -252,18 +290,18 @@ coot_runtime_t::init_cl(std::string& out_errmsg, const bool manual_selection, co
     }
   else
     {
-    cl_uint best_val = 0;
+    int best_val = -1;
     
-    for(cl_uint platform_count = 0; platform_count < n_platforms; ++platform_count)
+    for(size_t platform_count = 0; platform_count < n_platforms; ++platform_count)
       {
       std::vector<cl_device_id>& local_device_ids = device_ids.at(platform_count);
-      std::vector<uword>&        local_device_pri = device_pri.at(platform_count);
+      std::vector<int>&          local_device_pri = device_pri.at(platform_count);
       
-      cl_uint local_n_devices = local_device_ids.size();
+      size_t local_n_devices = local_device_ids.size();
       
-      for(cl_uint local_device_count = 0; local_device_count < local_n_devices; ++local_device_count)
+      for(size_t local_device_count = 0; local_device_count < local_n_devices; ++local_device_count)
         {
-        const uword tmp_val = local_device_pri.at(local_device_count);
+        const int tmp_val = local_device_pri.at(local_device_count);
         
         // cout << "platform_count: " << platform_count << "  local_device_count: " << local_device_count << "  priority: " << tmp_val << "   best_val: " << best_val << endl;
         
@@ -301,13 +339,13 @@ coot_runtime_t::init_cl(std::string& out_errmsg, const bool manual_selection, co
     }
   
   status = 0;
-  queue = clCreateCommandQueue(context, device_id, 0, &status);
+  cq = clCreateCommandQueue(context, device_id, 0, &status);
   
   // NOTE: http://stackoverflow.com/questions/28500496/opencl-function-found-deprecated-by-visual-studio
   // NOTE: clCreateCommandQueue is deprecated as of OpenCL 2.0, but it will be supported for the "foreseeable future"
   // NOTE: clCreateCommandQueue is replaced with clCreateCommandQueueWithProperties in OpenCL 2.0
   
-  if((status != CL_SUCCESS) || (queue == NULL))
+  if((status != CL_SUCCESS) || (cq == NULL))
     {
     out_errmsg = "couldn't create command queue";
     return false;
@@ -331,6 +369,7 @@ coot_runtime_t::interrogate_device(const bool print_details)
   
   cl_char vendor_name[1024]; // TODO: use dynamic memory allocation (podarray or std::vector)
   cl_char device_name[1024];
+  cl_char device_vstr[1024];  // vstr = version string
   
   vendor_name[0] = cl_char(0);
   device_name[0] = cl_char(0);
@@ -340,6 +379,7 @@ coot_runtime_t::interrogate_device(const bool print_details)
 
   clGetDeviceInfo(device_id, CL_DEVICE_VENDOR,              sizeof(vendor_name),         &vendor_name, NULL);
   clGetDeviceInfo(device_id, CL_DEVICE_NAME,                sizeof(device_name),         &device_name, NULL);
+  clGetDeviceInfo(device_id, CL_DEVICE_VERSION,             sizeof(device_vstr),         &device_vstr, NULL);
   clGetDeviceInfo(device_id, CL_DEVICE_TYPE,                sizeof(cl_device_type),      &device_type, NULL);
   clGetDeviceInfo(device_id, CL_DEVICE_ADDRESS_BITS,        sizeof(cl_uint),             &device_bits, NULL);
   clGetDeviceInfo(device_id, CL_DEVICE_DOUBLE_FP_CONFIG,    sizeof(cl_device_fp_config), &device_fp64, NULL);
@@ -348,7 +388,6 @@ coot_runtime_t::interrogate_device(const bool print_details)
   
   (*this).device_64bit_float = (device_fp64 != 0);
   (*this).n_compunits        = uword(n_units);
-  
   
   if(print_details)
     {
@@ -361,6 +400,7 @@ coot_runtime_t::interrogate_device(const bool print_details)
     
     get_stream_err1() << "        vendor: " << vendor_name << std::endl;
     get_stream_err1() << "        device: " << device_name << std::endl;
+    get_stream_err1() << "version string: " << device_vstr << std::endl;
     get_stream_err1() << "          bits: " << device_bits << std::endl;
     get_stream_err1() << "          fp64: " << ( (device_fp64 != 0) ? "yes" : "no" ) << std::endl;
     get_stream_err1() << "         align: " << alignment   << std::endl;
@@ -410,17 +450,17 @@ coot_runtime_t::interrogate_device(const bool print_details)
         
         status = 0;
         clSetKernelArg(tmp_kernel, 0, sizeof(cl_mem),  &tmp_device_mem);
-        status = clEnqueueTask(queue, tmp_kernel, 0, NULL, NULL);  // TODO: replace with clEnqueueNDRangeKernel to avoid deprecation warnings
+        status = clEnqueueTask(cq, tmp_kernel, 0, NULL, NULL);  // TODO: replace with clEnqueueNDRangeKernel to avoid deprecation warnings
         
         if(status == CL_SUCCESS)
           {
-          clFinish(queue);
+          clFinish(cq);
           
-          status = clEnqueueReadBuffer(queue, tmp_device_mem, CL_TRUE, 0, sizeof(cl_uint)*4, tmp_host_mem, 0, NULL, NULL);
+          status = clEnqueueReadBuffer(cq, tmp_device_mem, CL_TRUE, 0, sizeof(cl_uint)*4, tmp_host_mem, 0, NULL, NULL);
           
           if(status == CL_SUCCESS)
             {
-            clFinish(queue);
+            clFinish(cq);
             
             if(print_details)
               {
@@ -437,6 +477,8 @@ coot_runtime_t::interrogate_device(const bool print_details)
               found_width = true;
               if(device_sizet_width == 8)  { (*this).device_64bit_sizet = true; }
               }
+            
+            // TODO: for paranoia, check consistency with the version extracted from the version string (CL_DEVICE_VERSION)
             
             if(device_opencl_ver < 120)
               {
@@ -470,7 +512,7 @@ coot_runtime_t::init_kernels(std::vector<cl_kernel>& kernels, const std::string&
   
   // TODO: get info using clquery ?
   
-  cl_program program;  // cl_program is typedef for struct _cl_program*
+  coot_runtime_t::program_wrapper prog_holder;  // program_wrapper will automatically call clReleaseProgram() when it goes out of scope
   
 
   // cl_program clCreateProgramWithSource(cl_context context, cl_uint count, const char **strings, const size_t *lengths, cl_int *errcode_ret);
@@ -479,15 +521,16 @@ coot_runtime_t::init_kernels(std::vector<cl_kernel>& kernels, const std::string&
   //           If lengths is NULL, all strings in the strings argument are considered null-terminated.
   //           Any length value passed in that is greater than zero excludes the null terminator in its count. 
   
+  
   status = 0;
   
   const char* source_c_str = source.c_str();
   
-  program = clCreateProgramWithSource(context, 1, &source_c_str, NULL, &status);
+  prog_holder.prog = clCreateProgramWithSource(context, 1, &source_c_str, NULL, &status);
   
-  if((status != CL_SUCCESS) || (program == NULL))
+  if((status != CL_SUCCESS) || (prog_holder.prog == NULL))
     {
-    cout << "status: " << coot_clerror::as_string(status) << endl;
+    cout << "status: " << coot_cl_error::as_string(status) << endl;
     
     std::cout << "coot_runtime::init_kernels(): couldn't create program" << std::endl;
     return false;
@@ -501,7 +544,7 @@ coot_runtime_t::init_kernels(std::vector<cl_kernel>& kernels, const std::string&
   
   if(is_same_type<eT, u32>::yes)
     {
-    prefix = "uint_";
+    prefix = "u32_";
     
     build_options += "-D PREFIX=";
     build_options += prefix;
@@ -514,7 +557,7 @@ coot_runtime_t::init_kernels(std::vector<cl_kernel>& kernels, const std::string&
   else
   if(is_same_type<eT, s32>::yes)
     {
-    prefix = "int_";
+    prefix = "s32_";
     
     build_options += "-D PREFIX=";
     build_options += prefix;
@@ -527,7 +570,7 @@ coot_runtime_t::init_kernels(std::vector<cl_kernel>& kernels, const std::string&
   else
   if(is_same_type<eT, u64>::yes)
     {
-    prefix = "ulong_";
+    prefix = "u64_";
     
     build_options += "-D PREFIX=";
     build_options += prefix;
@@ -540,7 +583,7 @@ coot_runtime_t::init_kernels(std::vector<cl_kernel>& kernels, const std::string&
   else
   if(is_same_type<eT, s64>::yes)
     {
-    prefix = "long_";
+    prefix = "s64_";
     
     build_options += "-D PREFIX=";
     build_options += prefix;
@@ -578,34 +621,23 @@ coot_runtime_t::init_kernels(std::vector<cl_kernel>& kernels, const std::string&
     }
   
   
-  // TODO: remove the COOT_64BIT_INT define, and automatically use UWORD=ulong if the device supports it _and_ the host has 64 bit size_t ?
-  
-  #if defined(COOT_64BIT_INT)
-    build_options += (device_64bit_sizet) ? "-D UWORD=ulong" : "-D UWORD=uint";
+  build_options += ((sizeof(uword) >= 8) && device_64bit_sizet) ? "-D UWORD=ulong" : "-D UWORD=uint";
     
-    if(device_64bit_sizet == false)
-      {
-      coot_warn("COOT_64BIT_INT ignored; width of size_t on the device is not 64 bits");
-      }
-  #else
-    build_options += "-D UWORD=uint";
-  #endif
-  
-  status = clBuildProgram(program, 0, NULL, build_options.c_str(), NULL, NULL);
+  status = clBuildProgram(prog_holder.prog, 0, NULL, build_options.c_str(), NULL, NULL);
   
   if(status != CL_SUCCESS)
     {
-    cout << "status: " << coot_clerror::as_string(status) << endl;
+    cout << "status: " << coot_cl_error::as_string(status) << endl;
     
     size_t len = 0;
     char buffer[10240];  // TODO: use std::vector<char> or podarray
 
-    clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, sizeof(buffer), buffer, &len);
+    clGetProgramBuildInfo(prog_holder.prog, device_id, CL_PROGRAM_BUILD_LOG, sizeof(buffer), buffer, &len);
     std::cout << "coot_runtime::init_kernels(): couldn't build program;"              << std::endl;
     std::cout << "coot_runtime::init_kernels(): output from clGetProgramBuildInfo():" << std::endl;
     std::cout << buffer << std::endl;
     
-    return false;  // TODO: need to call clReleaseProgram(program)
+    return false;
     }
   
   
@@ -619,17 +651,15 @@ coot_runtime_t::init_kernels(std::vector<cl_kernel>& kernels, const std::string&
     
     const std::string kernel_name = prefix + names.at(i);
     
-    kernels.at(i) = clCreateKernel(program, kernel_name.c_str(), &status);
+    kernels.at(i) = clCreateKernel(prog_holder.prog, kernel_name.c_str(), &status);
     
     if((status != CL_SUCCESS) || (kernels[i] == NULL))
       {
-      std::cout << coot_clerror::as_string(status) << endl;
+      std::cout << coot_cl_error::as_string(status) << endl;
       std::cout << "kernel_name: " << kernel_name << endl;
-      return false;  // TODO: need to call clReleaseProgram(program)
+      return false;
       }
     }
-  
-  // if(program != NULL)  { clReleaseProgram(program); } // BUG: clReleaseProgram() - the program object is deleted after all kernel objects associated with program have been deleted
   
   return true;
   }
@@ -727,13 +757,13 @@ coot_runtime_t::get_context()
 
 inline
 cl_command_queue
-coot_runtime_t::get_queue()
+coot_runtime_t::get_cq()
   {
   coot_extra_debug_sigprint();
   
   coot_debug_check( (valid == false), "coot_runtime not valid" );
   
-  return queue;
+  return cq;
   }
 
 
@@ -746,14 +776,13 @@ coot_runtime_t::get_kernel(const kernel_id::enum_id num)
   coot_extra_debug_sigprint();
   
   coot_debug_check( (valid == false), "coot_runtime not valid" );
-    
-  typedef typename umat::elem_type u_type;
-  typedef typename imat::elem_type i_type;
   
-       if(is_same_type<eT,u_type>::yes)  { return u_kernels.at(num); }
-  else if(is_same_type<eT,i_type>::yes)  { return i_kernels.at(num); }
-  else if(is_same_type<eT,float >::yes)  { return f_kernels.at(num); }
-  else if(is_same_type<eT,double>::yes)  { return d_kernels.at(num); }
+       if(is_same_type<eT,u32   >::yes)  { return u32_kernels.at(num); }
+  else if(is_same_type<eT,s32   >::yes)  { return s32_kernels.at(num); }
+  else if(is_same_type<eT,u64   >::yes)  { return u64_kernels.at(num); }
+  else if(is_same_type<eT,s64   >::yes)  { return s64_kernels.at(num); }
+  else if(is_same_type<eT,float >::yes)  { return   f_kernels.at(num); }
+  else if(is_same_type<eT,double>::yes)  { return   d_kernels.at(num); }
   else { coot_debug_check(true, "unsupported element type" ); }
   }
 
@@ -767,10 +796,36 @@ coot_runtime_t coot_runtime;
 
 
 //
-// queue_guard
+// program_wrapper
 
 inline
-coot_runtime_t::queue_guard::queue_guard()
+coot_runtime_t::program_wrapper::program_wrapper()
+  {
+  coot_extra_debug_sigprint();
+  
+  prog = NULL;
+  }
+
+
+
+inline
+coot_runtime_t::program_wrapper::~program_wrapper()
+  {
+  coot_extra_debug_sigprint();
+  
+  if(prog != NULL)
+    {
+    clReleaseProgram(prog);
+    }
+  }
+
+
+
+//
+// cq_guard
+
+inline
+coot_runtime_t::cq_guard::cq_guard()
   {
   coot_extra_debug_sigprint();
   
@@ -779,21 +834,21 @@ coot_runtime_t::queue_guard::queue_guard()
   if(coot_runtime.is_valid())
     {
     coot_extra_debug_print("calling clFinish()");
-    clFinish(coot_runtime.get_queue());  // force synchronisation
+    clFinish(coot_runtime.get_cq());  // force synchronisation
     }
   }
 
 
 
 inline
-coot_runtime_t::queue_guard::~queue_guard()
+coot_runtime_t::cq_guard::~cq_guard()
   {
   coot_extra_debug_sigprint();
   
   if(coot_runtime.is_valid())
     {
     coot_extra_debug_print("calling clFlush()");
-    clFlush(coot_runtime.get_queue());  // submit all queued commands
+    clFlush(coot_runtime.get_cq());  // submit all enqueued commands
     }
   
   coot_runtime.unlock();
@@ -808,7 +863,7 @@ coot_runtime_t::queue_guard::~queue_guard()
 inline
 coot_runtime_t::adapt_val::adapt_val(const uword val)
   {
-  if(coot_runtime.has_64bit_sizet())
+  if((sizeof(uword) >= 8) && coot_runtime.has_64bit_sizet())
     {
     size  = sizeof(u64);
     addr  = (void*)(&val64);
@@ -816,9 +871,13 @@ coot_runtime_t::adapt_val::adapt_val(const uword val)
     }
   else
     {
-    // NOTE: no check is made whether val will fit inside u32
     size   = sizeof(u32);
     addr   = (void*)(&val32);
     val32  = u32(val);
+    
+    if( (sizeof(uword) >= 8) && (val > 0xffffffffU) )
+      {
+      coot_debug_warn("adapt_val: given value doesn't fit into unsigned 32 bit integer");
+      }
     }
   }

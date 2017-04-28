@@ -13,11 +13,11 @@
 // ------------------------------------------------------------------------
 
 
-//! \addtogroup coot_clerror
+//! \addtogroup coot_cl_error
 //! @{
 
 
-struct coot_clerror
+struct coot_cl_error
   {
   coot_cold
   static

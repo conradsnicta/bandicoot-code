@@ -25,11 +25,11 @@ arrayops::copy(cl_mem dest, cl_mem src, const uword n_elem)
   {
   coot_extra_debug_sigprint();
   
-  coot_runtime_t::queue_guard guard;
+  coot_runtime_t::cq_guard guard;
   
   coot_extra_debug_print("clEnqueueCopyBuffer()");
   
-  cl_int status = clEnqueueCopyBuffer(coot_runtime.get_queue(), src, dest, size_t(0), size_t(0), sizeof(eT)*size_t(n_elem), cl_uint(0), NULL, NULL);
+  cl_int status = clEnqueueCopyBuffer(coot_runtime.get_cq(), src, dest, size_t(0), size_t(0), sizeof(eT)*size_t(n_elem), cl_uint(0), NULL, NULL);
   
   coot_check_runtime_error( (status != 0), "arrayops::copy(): couldn't copy buffer" );
   }
@@ -43,7 +43,7 @@ arrayops::inplace_op_scalar(cl_mem dest, const eT val, const uword n_elem, cl_ke
   {
   coot_extra_debug_sigprint();
   
-  coot_runtime_t::queue_guard guard;
+  coot_runtime_t::cq_guard guard;
   
   coot_runtime_t::adapt_val N(n_elem);
   
@@ -57,7 +57,7 @@ arrayops::inplace_op_scalar(cl_mem dest, const eT val, const uword n_elem, cl_ke
   
   coot_extra_debug_print("clEnqueueNDRangeKernel()");
   
-  status |= clEnqueueNDRangeKernel(coot_runtime.get_queue(), kernel, 1, NULL, global_work_size, NULL, 0, NULL, NULL);
+  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, 1, NULL, global_work_size, NULL, 0, NULL, NULL);
   
   coot_check_runtime_error( (status != 0), "arrayops::inplace_op_scalar(): couldn't execute kernel" );
   }
@@ -144,7 +144,7 @@ arrayops::inplace_op_array(cl_mem dest, cl_mem src, const uword n_elem, cl_kerne
   {
   coot_extra_debug_sigprint();
   
-  coot_runtime_t::queue_guard guard;
+  coot_runtime_t::cq_guard guard;
   
   coot_runtime_t::adapt_val N(n_elem);
   
@@ -158,7 +158,7 @@ arrayops::inplace_op_array(cl_mem dest, cl_mem src, const uword n_elem, cl_kerne
   
   coot_extra_debug_print("clEnqueueNDRangeKernel()");
   
-  status |= clEnqueueNDRangeKernel(coot_runtime.get_queue(), kernel, 1, NULL, global_work_size, NULL, 0, NULL, NULL);
+  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, 1, NULL, global_work_size, NULL, 0, NULL, NULL);
   
   coot_check_runtime_error( (status != 0), "arrayops::inplace_op_array(): couldn't execute kernel" );
   }

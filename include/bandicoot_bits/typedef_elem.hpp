@@ -86,10 +86,10 @@
   
 #elif defined(SIZE_MAX)
   
-  #if   (SIZE_MAX == 0xffffffff)
+  #if   (SIZE_MAX == 0xffffffffU)
     typedef u32 uword;
     typedef s32 sword;
-  #elif (SIZE_MAX == 0xffffffffffffffff)
+  #elif (SIZE_MAX == 0xffffffffffffffffU)
     typedef u64 uword;
     typedef s64 sword;
   #else

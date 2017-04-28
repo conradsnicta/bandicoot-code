@@ -23,7 +23,7 @@ Mat<eT>::~Mat()
   {
   coot_extra_debug_sigprint_this(this);
   
-  coot_runtime_t::queue_guard guard;  // force synchronisation, in case there are any pending commands
+  coot_runtime_t::cq_guard guard;  // force synchronisation, in case there are any pending commands
   
   cleanup();
   
@@ -87,7 +87,7 @@ Mat<eT>::get_device_mem() const
   {
   coot_extra_debug_sigprint();
   
-  clFinish(coot_runtime.get_queue());  // force synchronisation
+  clFinish(coot_runtime.get_cq());  // force synchronisation
   
   return device_mem;
   }
@@ -103,12 +103,12 @@ Mat<eT>::read_device_mem(eT* dest_memptr, const uword N) const
   
   if( (n_elem == 0) || (N == 0) )  { return; }
   
-  coot_runtime_t::queue_guard guard;
+  coot_runtime_t::cq_guard guard;
   
   const uword n_elem_mod = (std::min)(n_elem, N);
   
   // use a blocking call
-  cl_int status = clEnqueueReadBuffer(coot_runtime.get_queue(), device_mem, CL_TRUE, 0, sizeof(eT)*n_elem_mod, dest_memptr, 0, NULL, NULL);
+  cl_int status = clEnqueueReadBuffer(coot_runtime.get_cq(), device_mem, CL_TRUE, 0, sizeof(eT)*n_elem_mod, dest_memptr, 0, NULL, NULL);
   
   coot_check_runtime_error( (status != CL_SUCCESS), "Mat::read_device_mem(): couldn't access device memory" );
   }
@@ -124,12 +124,12 @@ Mat<eT>::write_device_mem(const eT* src_memptr, const uword N)
   
   if( (n_elem == 0) || (N == 0) )  { return; }
   
-  coot_runtime_t::queue_guard guard;
+  coot_runtime_t::cq_guard guard;
   
   const uword n_elem_mod = (std::min)(n_elem, N);
   
   // use a blocking call
-  cl_int status = clEnqueueWriteBuffer(coot_runtime.get_queue(), device_mem, CL_TRUE, 0, sizeof(eT)*n_elem_mod, src_memptr, 0, NULL, NULL);
+  cl_int status = clEnqueueWriteBuffer(coot_runtime.get_cq(), device_mem, CL_TRUE, 0, sizeof(eT)*n_elem_mod, src_memptr, 0, NULL, NULL);
   
   coot_check_runtime_error( (status != CL_SUCCESS), "Mat::write_device_mem(): couldn't access device memory" );
   }
@@ -947,7 +947,7 @@ Mat<eT>::eye()
   {
   coot_extra_debug_sigprint();
   
-  coot_runtime_t::queue_guard guard;
+  coot_runtime_t::cq_guard guard;
   
   coot_runtime_t::adapt_val local_n_rows(n_rows);
   coot_runtime_t::adapt_val local_n_cols(n_cols);
@@ -962,7 +962,7 @@ Mat<eT>::eye()
   
   const size_t global_work_size[2] = { size_t(n_rows), size_t(n_cols) };
   
-  status |= clEnqueueNDRangeKernel(coot_runtime.get_queue(), kernel, 2, NULL, global_work_size, NULL, 0, NULL, NULL);
+  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, 2, NULL, global_work_size, NULL, 0, NULL, NULL);
   
   coot_check_runtime_error( (status != 0), "Mat::eye(): couldn't execute kernel" );
   
@@ -2007,14 +2007,14 @@ Mat<eT>::get_submatrix(Mat<eT>& X, const uword start_row, const uword start_col,
   size_t dst_row_pitch   = 0;
   size_t dst_slice_pitch = 0;
   
-  cl_int status = clEnqueueCopyBufferRect(coot_runtime.get_queue(), (*this).get_device_mem(), X.get_device_mem(), src_origin, dst_origin, region, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch, 0, NULL, NULL);
+  cl_int status = clEnqueueCopyBufferRect(coot_runtime.get_cq(), (*this).get_device_mem(), X.get_device_mem(), src_origin, dst_origin, region, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch, 0, NULL, NULL);
   
   if(status != CL_SUCCESS)
     {
     cout << "status: " << status << endl;
     }
   
-  clFinish(coot_runtime.get_queue());
+  clFinish(coot_runtime.get_cq());
   }
 
 
@@ -2054,14 +2054,14 @@ Mat<eT>::set_submatrix(Mat<eT>& X, const uword start_row, const uword start_col)
   size_t dst_row_pitch   = sizeof(eT) * n_rows;          // length of each row in bytes to be used for the memory region associated with dst_buffer. If dst_row_pitch is 0, dst_row_pitch is computed as region[0].
   size_t dst_slice_pitch = sizeof(eT) * n_cols * n_rows; // length of each 2D slice in bytes to be used for the memory region associated with dst_buffer. If dst_slice_pitch is 0, dst_slice_pitch is computed as region[1] * dst_row_pitch.
   
-  cl_int status = clEnqueueCopyBufferRect(coot_runtime.get_queue(), X.get_device_mem(), (*this).get_device_mem(), src_origin, dst_origin, region, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch, 0, NULL, NULL);
+  cl_int status = clEnqueueCopyBufferRect(coot_runtime.get_cq(), X.get_device_mem(), (*this).get_device_mem(), src_origin, dst_origin, region, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch, 0, NULL, NULL);
   
   if(status != CL_SUCCESS)
     {
     cout << "status: " << status << endl;
     }
   
-  clFinish(coot_runtime.get_queue());
+  clFinish(coot_runtime.get_cq());
   }
 
 
@@ -2098,11 +2098,11 @@ Mat<eT>::get_sum_all_1(Mat<eT>& X)
   const size_t  global_work_size[1]   = { 1 };
   const size_t* local_work_size = NULL;
   
-  status = clEnqueueNDRangeKernel(coot_runtime.get_queue(), kernel, work_dim, global_work_offset, global_work_size, local_work_size, 0, NULL, NULL);
+  status = clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, work_dim, global_work_offset, global_work_size, local_work_size, 0, NULL, NULL);
   
   coot_check_cl_error(status, "get_sum_all_1(): clEnqueueNDRangeKernel()");
   
-  clFinish(coot_runtime.get_queue());
+  clFinish(coot_runtime.get_cq());
   }
 
 
@@ -2278,11 +2278,11 @@ Mat<eT>::get_sum_colwise(Mat<eT>& X)
   // Max work item sizes  512x512x512
   // Max work group size  512
   
-  status = clEnqueueNDRangeKernel(coot_runtime.get_queue(), kernel, work_dim, global_work_offset, global_work_size, local_work_size, 0, NULL, NULL);
+  status = clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, work_dim, global_work_offset, global_work_size, local_work_size, 0, NULL, NULL);
   
   coot_check_cl_error(status, "get_sum_colwise(): clEnqueueNDRangeKernel()");
   
-  clFinish(coot_runtime.get_queue());
+  clFinish(coot_runtime.get_cq());
   }
 
 
@@ -2322,14 +2322,14 @@ Mat<eT>::get_sum_rowwise(Mat<eT>& X)
   const size_t  global_work_size[1]   = { n_rows };
   const size_t* local_work_size = NULL;
   
-  status |= clEnqueueNDRangeKernel(coot_runtime.get_queue(), kernel, work_dim, global_work_offset, global_work_size, local_work_size, 0, NULL, NULL);
+  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, work_dim, global_work_offset, global_work_size, local_work_size, 0, NULL, NULL);
   
   if(status != CL_SUCCESS)
     {
     cout << "status: " << status << endl;
     }
   
-  clFinish(coot_runtime.get_queue());
+  clFinish(coot_runtime.get_cq());
   }
 
 
@@ -2380,14 +2380,14 @@ Mat<eT>::get_sum_submat_colwise(Mat<eT>& X, const uword start_row, const uword s
   const size_t  global_work_size[1]   = { sub_n_cols };  // number of columns in the submatrix
   const size_t* local_work_size = NULL;
   
-  status |= clEnqueueNDRangeKernel(coot_runtime.get_queue(), kernel, work_dim, global_work_offset, global_work_size, local_work_size, 0, NULL, NULL);
+  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, work_dim, global_work_offset, global_work_size, local_work_size, 0, NULL, NULL);
   
   if(status != CL_SUCCESS)
     {
     cout << "status: " << status << endl;
     }
   
-  clFinish(coot_runtime.get_queue());
+  clFinish(coot_runtime.get_cq());
   }
 
 
@@ -2437,14 +2437,14 @@ Mat<eT>::get_sum_submat_rowwise(Mat<eT>& X, const uword start_row, const uword s
   const size_t  global_work_size[1]   = { sub_n_rows };
   const size_t* local_work_size = NULL;
   
-  status |= clEnqueueNDRangeKernel(coot_runtime.get_queue(), kernel, work_dim, global_work_offset, global_work_size, local_work_size, 0, NULL, NULL);
+  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, work_dim, global_work_offset, global_work_size, local_work_size, 0, NULL, NULL);
   
   if(status != CL_SUCCESS)
     {
     cout << "status: " << status << endl;
     }
   
-  clFinish(coot_runtime.get_queue());
+  clFinish(coot_runtime.get_cq());
   }
 
 

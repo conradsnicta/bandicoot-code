@@ -35,7 +35,7 @@ eop_core<eop_type>::apply(Mat<typename T1::elem_type>& out, const eOp<T1, eop_ty
   const unwrap<T1>   U(x.m);
   const Mat<eT>& A = U.M;
   
-  coot_runtime_t::queue_guard guard;
+  coot_runtime_t::cq_guard guard;
   
   cl_kernel kernel;
   
@@ -67,7 +67,7 @@ eop_core<eop_type>::apply(Mat<typename T1::elem_type>& out, const eOp<T1, eop_ty
   
   size_t global_work_size = size_t(n_elem);
   
-  status |= clEnqueueNDRangeKernel(coot_runtime.get_queue(), kernel, 1, NULL, &global_work_size, NULL, 0, NULL, NULL);
+  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, 1, NULL, &global_work_size, NULL, 0, NULL, NULL);
   
   coot_check_runtime_error( (status != CL_SUCCESS), "eop_core: couldn't execute kernel" );
   }

@@ -17,37 +17,42 @@
 //! @{
 
 
-#if defined(COOT_64BIT_INT)
-  
-  typedef Mat <u64> umat;
-  typedef Col <u64> uvec;
-  typedef Col <u64> ucolvec;
-  typedef Row <u64> urowvec;
-  typedef Cube<u64> ucube;
-  
-  typedef Mat <s64> imat;
-  typedef Col <s64> ivec;
-  typedef Col <s64> icolvec;
-  typedef Row <s64> irowvec;
-  typedef Cube<s64> icube;
-  
-#else
-  
-  typedef Mat <u32> umat;
-  typedef Col <u32> uvec;
-  typedef Col <u32> ucolvec;
-  typedef Row <u32> urowvec;
-  typedef Cube<u32> ucube;
-  
-  typedef Mat <s32> imat;
-  typedef Col <s32> ivec;
-  typedef Col <s32> icolvec;
-  typedef Row <s32> irowvec;
-  typedef Cube<s32> icube;
-  
-#endif
+typedef Mat <u32> u32_mat;
+typedef Col <u32> u32_vec;
+typedef Col <u32> u32_colvec;
+typedef Row <u32> u32_rowvec;
+typedef Cube<u32> u32_cube;
 
+typedef Mat <s32> s32_mat;
+typedef Col <s32> s32_vec;
+typedef Col <s32> s32_colvec;
+typedef Row <s32> s32_rowvec;
+typedef Cube<s32> s32_cube;
+  
+typedef Mat <u64> u64_mat;
+typedef Col <u64> u64_vec;
+typedef Col <u64> u64_colvec;
+typedef Row <u64> u64_rowvec;
+typedef Cube<u64> u64_cube;
 
+typedef Mat <s64> s64_mat;
+typedef Col <s64> s64_vec;
+typedef Col <s64> s64_colvec;
+typedef Row <s64> s64_rowvec;
+typedef Cube<s64> s64_cube;
+  
+typedef Mat <uword> umat;
+typedef Col <uword> uvec;
+typedef Col <uword> ucolvec;
+typedef Row <uword> urowvec;
+typedef Cube<uword> ucube;
+
+typedef Mat <sword> imat;
+typedef Col <sword> ivec;
+typedef Col <sword> icolvec;
+typedef Row <sword> irowvec;
+typedef Cube<sword> icube;
+  
 typedef Mat <float> fmat;
 typedef Col <float> fvec;
 typedef Col <float> fcolvec;

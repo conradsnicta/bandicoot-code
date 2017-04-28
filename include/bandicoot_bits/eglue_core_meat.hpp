@@ -39,7 +39,7 @@ eglue_core<eglue_type>::apply(Mat<typename T1::elem_type>& out, const eGlue<T1, 
   const Mat<eT>& A = UA.M;
   const Mat<eT>& B = UB.M;
   
-  coot_runtime_t::queue_guard guard;
+  coot_runtime_t::cq_guard guard;
   
   cl_kernel kernel;
   
@@ -65,7 +65,7 @@ eglue_core<eglue_type>::apply(Mat<typename T1::elem_type>& out, const eGlue<T1, 
   
   size_t global_work_size = size_t(n_elem);
   
-  status |= clEnqueueNDRangeKernel(coot_runtime.get_queue(), kernel, 1, NULL, &global_work_size, NULL, 0, NULL, NULL);
+  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, 1, NULL, &global_work_size, NULL, 0, NULL, NULL);
   
   coot_check_runtime_error( (status != CL_SUCCESS), "eglue_core: couldn't execute kernel" );
   }

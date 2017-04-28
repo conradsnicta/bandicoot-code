@@ -22,7 +22,7 @@ class coot_runtime_t
   coot_aligned cl_platform_id   platform_id;
   coot_aligned cl_device_id     device_id;
   coot_aligned cl_context       context;
-  coot_aligned cl_command_queue queue;
+  coot_aligned cl_command_queue cq;
   coot_aligned uword            n_compunits;
   
   // cl_platform_id   is typedef for struct _cl_platform_id*
@@ -31,8 +31,10 @@ class coot_runtime_t
   // cl_command_queue is typedef for struct _cl_command_queue*
   // cl_kernel        is typedef for struct _cl_kernel*
   
-  coot_aligned std::vector<cl_kernel>    u_kernels;
-  coot_aligned std::vector<cl_kernel>    i_kernels;
+  coot_aligned std::vector<cl_kernel>  u32_kernels;
+  coot_aligned std::vector<cl_kernel>  s32_kernels;
+  coot_aligned std::vector<cl_kernel>  u64_kernels;
+  coot_aligned std::vector<cl_kernel>  s64_kernels;
   coot_aligned std::vector<cl_kernel>    f_kernels;
   coot_aligned std::vector<cl_kernel>    d_kernels;
   coot_aligned std::vector<cl_kernel> cx_f_kernels;
@@ -46,8 +48,8 @@ class coot_runtime_t
   coot_aligned std::mutex mutex;
   #endif
   
-  inline void   lock();  //! NOTE: do not call this function directly; instead instantiate the queue_guard class inside a relevant scope
-  inline void unlock();  //! NOTE: do not call this function directly; it's automatically called when an instance of queue_guard goes out of scope
+  inline void   lock();  //! NOTE: do not call this function directly; instead instantiate the cq_guard class inside a relevant scope
+  inline void unlock();  //! NOTE: do not call this function directly; it's automatically called when an instance of cq_guard goes out of scope
   
   inline void cleanup_cl();
   
@@ -81,30 +83,47 @@ class coot_runtime_t
   inline void release_memory(cl_mem device_mem);
   
   inline cl_context       get_context();
-  inline cl_command_queue get_queue();
+  inline cl_command_queue get_cq();
   
   // TODO: add function to return info about device as a string
   
   template<typename eT> inline cl_kernel get_kernel(const kernel_id::enum_id num);
   
-  class queue_guard;
+  class program_wrapper;
+  class cq_guard;
   class adapt_val;
   
-  friend class queue_guard;  // explicitly allows queue_guard to call lock() and unlock()
+  friend class cq_guard;  // explicitly allows cq_guard to call lock() and unlock()
   };
 
 
 
-class coot_runtime_t::queue_guard
+class coot_runtime_t::program_wrapper
   {
   public:
   
-  inline  queue_guard();
-  inline ~queue_guard();
+  coot_aligned cl_program prog;  // cl_program is typedef for struct _cl_program*
+  
+  inline  program_wrapper();
+  inline ~program_wrapper();
   
   #if defined(COOT_USE_CXX11)
-               queue_guard(const queue_guard&) = delete;
-  queue_guard&   operator=(const queue_guard&) = delete;
+                   program_wrapper(const program_wrapper&) = delete;
+  program_wrapper&       operator=(const program_wrapper&) = delete;
+  #endif
+  };
+
+
+class coot_runtime_t::cq_guard
+  {
+  public:
+  
+  inline  cq_guard();
+  inline ~cq_guard();
+  
+  #if defined(COOT_USE_CXX11)
+             cq_guard(const cq_guard&) = delete;
+  cq_guard& operator=(const cq_guard&) = delete;
   #endif
   };
 
@@ -121,3 +140,5 @@ class coot_runtime_t::adapt_val
   
   inline adapt_val(const uword val);
   };
+
+

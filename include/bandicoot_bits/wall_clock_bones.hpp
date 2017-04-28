@@ -17,7 +17,6 @@
 //! @{
 
 
-//! Class for measuring time intervals
 class wall_clock
   {
   public:

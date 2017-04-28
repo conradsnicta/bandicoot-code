@@ -77,7 +77,7 @@ subview<eT>::inplace_op(const eT val, cl_kernel kernel)
   
   if(n_elem == 0)  { return; }
   
-  coot_runtime_t::queue_guard guard;
+  coot_runtime_t::cq_guard guard;
   
   const uword end_row = aux_row1 + n_rows - 1;
   const uword end_col = aux_col1 + n_cols - 1;
@@ -98,7 +98,8 @@ subview<eT>::inplace_op(const eT val, cl_kernel kernel)
   size_t global_work_offset[2] = { size_t(aux_row1), size_t(aux_col1) };  // starting point in parent matrix
   size_t global_work_size[2]   = { size_t(n_rows),   size_t(n_cols)   };  // size of submatrix
   
-  status |= clEnqueueNDRangeKernel(coot_runtime.get_queue(), kernel, 2, global_work_offset, global_work_size, NULL, 0, NULL, NULL);
+  // NOTE: Clover / Mesa 13.0.4 can't handle offsets
+  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, 2, global_work_offset, global_work_size, NULL, 0, NULL, NULL);
   
   coot_check_runtime_error( (status != 0), "subview::inplace_op(): couldn't execute kernel" );
   }
@@ -197,7 +198,7 @@ subview<eT>::inplace_op(const Base<eT,T1>& in, cl_kernel kernel, const char* ide
   
   if(n_elem == 0)  { return; }
   
-  coot_runtime_t::queue_guard guard;
+  coot_runtime_t::cq_guard guard;
   
   coot_runtime_t::adapt_val start_row(aux_row1);
   coot_runtime_t::adapt_val start_col(aux_col1);
@@ -219,7 +220,7 @@ subview<eT>::inplace_op(const Base<eT,T1>& in, cl_kernel kernel, const char* ide
   
   size_t global_work_size[2] = { size_t(X.n_rows), size_t(X.n_cols) };
   
-  status |= clEnqueueNDRangeKernel(coot_runtime.get_queue(), kernel, 2, NULL, global_work_size, NULL, 0, NULL, NULL);
+  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, 2, NULL, global_work_size, NULL, 0, NULL, NULL);
   
   coot_check_runtime_error( (status != 0), "subview::inplace_op(): couldn't execute kernel" );
   }
@@ -234,7 +235,9 @@ subview<eT>::operator= (const Base<eT,T1>& in)
   {
   coot_extra_debug_sigprint();
   
-  if(false)
+  // TODO: determine which is generally faster on various platforms and GPUs
+  
+  if(true)
     {
     cl_kernel kernel = coot_runtime.get_kernel<eT>(kernel_id::submat_inplace_set_mat);
     
@@ -267,7 +270,7 @@ subview<eT>::operator= (const Base<eT,T1>& in)
     size_t dst_row_pitch   = sizeof(eT) * m.n_rows;
     size_t dst_slice_pitch = sizeof(eT) * m.n_cols * m.n_rows;
     
-    cl_int status = clEnqueueCopyBufferRect(coot_runtime.get_queue(), X.device_mem, m.device_mem, src_origin, dst_origin, region, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch, 0, NULL, NULL);
+    cl_int status = clEnqueueCopyBufferRect(coot_runtime.get_cq(), X.device_mem, m.device_mem, src_origin, dst_origin, region, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch, 0, NULL, NULL);
     
     coot_check_runtime_error( (status != 0), "subview::extract: couldn't copy buffer" );
     }
@@ -511,7 +514,7 @@ subview<eT>::extract(Mat<eT>& out, const subview<eT>& in)
     return;
     }
   
-  coot_runtime_t::queue_guard guard;
+  coot_runtime_t::cq_guard guard;
   
   // treat the matrix as an image rotated 90 degrees
   // width  of img = number of rows
@@ -520,6 +523,8 @@ subview<eT>::extract(Mat<eT>& out, const subview<eT>& in)
   // whoever designed the API for clEnqueueCopyBufferRect() should be permanently removed from the gene pool;
   // the starting row needs to be multiplied by the element size,
   // because it was too logical to add a separate "size of element" argument
+  
+  // TODO: is using clEnqueueCopyBufferRect actually faster than using a dedicated kernel?
   
   size_t src_origin[3] = { in.aux_row1*sizeof(eT), in.aux_col1, 0 };
   size_t dst_origin[3] = { 0, 0, 0 };
@@ -532,7 +537,7 @@ subview<eT>::extract(Mat<eT>& out, const subview<eT>& in)
   size_t dst_row_pitch   = 0;
   size_t dst_slice_pitch = 0;
   
-  cl_int status = clEnqueueCopyBufferRect(coot_runtime.get_queue(), in.m.device_mem, out.device_mem, src_origin, dst_origin, region, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch, 0, NULL, NULL);
+  cl_int status = clEnqueueCopyBufferRect(coot_runtime.get_cq(), in.m.device_mem, out.device_mem, src_origin, dst_origin, region, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch, 0, NULL, NULL);
   
   coot_check_runtime_error( (status != 0), "subview::extract: couldn't copy buffer" );
   }

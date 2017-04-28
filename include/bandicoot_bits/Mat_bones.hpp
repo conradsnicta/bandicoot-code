@@ -215,6 +215,7 @@ class Mat : public Base< eT, Mat<eT> >
   inline void init(const uword new_n_rows, const uword new_n_cols);
   
   friend class subview<eT>;
+  friend class MatValProxy<eT>;
 
   
   public:
