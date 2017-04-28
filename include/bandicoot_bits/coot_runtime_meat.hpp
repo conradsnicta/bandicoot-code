@@ -62,10 +62,10 @@ coot_runtime_t::coot_runtime_t()
     status = init_kernels<s32>(s32_kernels, kernel_src::get_source(), kernel_id::get_names());
     if(status == false)  { coot_warn("coot_runtime: couldn't setup OpenCL kernels"); }
     
-    status = init_kernels<u32>(u64_kernels, kernel_src::get_source(), kernel_id::get_names());
+    status = init_kernels<u64>(u64_kernels, kernel_src::get_source(), kernel_id::get_names());
     if(status == false)  { coot_warn("coot_runtime: couldn't setup OpenCL kernels"); }
     
-    status = init_kernels<s32>(s64_kernels, kernel_src::get_source(), kernel_id::get_names());
+    status = init_kernels<s64>(s64_kernels, kernel_src::get_source(), kernel_id::get_names());
     if(status == false)  { coot_warn("coot_runtime: couldn't setup OpenCL kernels"); }
     
     status = init_kernels<float>(f_kernels, kernel_src::get_source(), kernel_id::get_names());
