@@ -23,7 +23,7 @@ class cpu_memory
   
   template<typename eT> inline coot_malloc static eT* acquire(const uword n_elem);
   
-  template<typename eT> coot_inline static void release(eT* mem);
+  template<typename eT> inline static void release(eT* mem);
   };
 
 
@@ -75,7 +75,7 @@ cpu_memory::acquire(const uword n_elem)
 
 
 template<typename eT>
-coot_inline
+inline
 void
 cpu_memory::release(eT* mem)
   {
