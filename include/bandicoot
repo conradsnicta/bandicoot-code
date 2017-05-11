@@ -185,6 +185,7 @@ namespace coot
   #include "bandicoot_bits/fn_as_scalar.hpp"
   #include "bandicoot_bits/fn_elem.hpp"
   #include "bandicoot_bits/fn_trace.hpp"
+  #include "bandicoot_bits/fn_accu.hpp"
   
   
   //

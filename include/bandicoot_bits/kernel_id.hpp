@@ -50,6 +50,8 @@ struct kernel_id
     equ_array_div_scalar_post,
     equ_array_square,
     equ_array_sqrt,
+    equ_array_exp,
+    equ_array_log,
     //
     equ_array_plus_array,
     equ_array_minus_array,
@@ -61,7 +63,10 @@ struct kernel_id
     get_diag,
     trace,
     //
-    sum_all,
+    accu_simple,
+    accu_chunked,
+    accu_twostage,
+    //
     sum_colwise,
     sum_rowwise,
     submat_sum_colwise,
@@ -111,6 +116,8 @@ struct kernel_id
     names.push_back("equ_array_div_scalar_post");
     names.push_back("equ_array_square");
     names.push_back("equ_array_sqrt");
+    names.push_back("equ_array_exp");
+    names.push_back("equ_array_log");
     
     names.push_back("equ_array_plus_array");
     names.push_back("equ_array_minus_array");
@@ -122,7 +129,10 @@ struct kernel_id
     names.push_back("get_diag");
     names.push_back("trace");
     
-    names.push_back("sum_all");
+    names.push_back("accu_simple");
+    names.push_back("accu_chunked");
+    names.push_back("accu_twostage");
+    
     names.push_back("sum_colwise");
     names.push_back("sum_rowwise");
     names.push_back("submat_sum_colwise");

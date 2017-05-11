@@ -48,10 +48,12 @@ eop_core<eop_type>::apply(Mat<typename T1::elem_type>& out, const eOp<T1, eop_ty
   else if(is_same_type<eop_type, eop_scalar_div_post  >::yes)  { kernel = coot_runtime.get_kernel<eT>(kernel_id::equ_array_div_scalar_post  ); }
   else if(is_same_type<eop_type, eop_square           >::yes)  { kernel = coot_runtime.get_kernel<eT>(kernel_id::equ_array_square           ); }
   else if(is_same_type<eop_type, eop_sqrt             >::yes)  { kernel = coot_runtime.get_kernel<eT>(kernel_id::equ_array_sqrt             ); }
+  else if(is_same_type<eop_type, eop_exp              >::yes)  { kernel = coot_runtime.get_kernel<eT>(kernel_id::equ_array_exp              ); }
+  else if(is_same_type<eop_type, eop_log              >::yes)  { kernel = coot_runtime.get_kernel<eT>(kernel_id::equ_array_log              ); }
   else { coot_debug_check(true, "fixme: unhandled eop_type"); }
   
-  cl_mem out_device_mem = out.get_device_mem_no_sync();
-  cl_mem   A_device_mem =   A.get_device_mem_no_sync();
+  cl_mem out_device_mem = out.get_device_mem(false);
+  cl_mem   A_device_mem =   A.get_device_mem(false);
   
   eT val = x.aux;
   

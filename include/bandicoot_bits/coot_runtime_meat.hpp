@@ -375,8 +375,8 @@ coot_runtime_t::interrogate_device(const bool print_details)
   vendor_name[0] = cl_char(0);
   device_name[0] = cl_char(0);
   
-  cl_uint alignment = 0;
-  cl_uint n_units   = 0;
+  cl_uint tmp_align   = 0;
+  cl_uint tmp_n_units = 0;
 
   clGetDeviceInfo(device_id, CL_DEVICE_VENDOR,              sizeof(vendor_name),         &vendor_name, NULL);
   clGetDeviceInfo(device_id, CL_DEVICE_NAME,                sizeof(device_name),         &device_name, NULL);
@@ -384,11 +384,14 @@ coot_runtime_t::interrogate_device(const bool print_details)
   clGetDeviceInfo(device_id, CL_DEVICE_TYPE,                sizeof(cl_device_type),      &device_type, NULL);
   clGetDeviceInfo(device_id, CL_DEVICE_ADDRESS_BITS,        sizeof(cl_uint),             &device_bits, NULL);
   clGetDeviceInfo(device_id, CL_DEVICE_DOUBLE_FP_CONFIG,    sizeof(cl_device_fp_config), &device_fp64, NULL);
-  clGetDeviceInfo(device_id, CL_DEVICE_MEM_BASE_ADDR_ALIGN, sizeof(cl_uint),             &alignment,   NULL);
-  clGetDeviceInfo(device_id, CL_DEVICE_MAX_COMPUTE_UNITS,   sizeof(cl_uint),             &n_units,     NULL);
+  clGetDeviceInfo(device_id, CL_DEVICE_MEM_BASE_ADDR_ALIGN, sizeof(cl_uint),             &tmp_align,   NULL);
+  clGetDeviceInfo(device_id, CL_DEVICE_MAX_COMPUTE_UNITS,   sizeof(cl_uint),             &tmp_n_units, NULL);
   
   (*this).device_64bit_float = (device_fp64 != 0);
-  (*this).n_compunits        = uword(n_units);
+  (*this).n_units            = uword(tmp_n_units);  // TODO: add sanity check to ensure n_units >= 1
+  
+  
+  
   
   if(print_details)
     {
@@ -404,8 +407,8 @@ coot_runtime_t::interrogate_device(const bool print_details)
     get_stream_err1() << "version string: " << device_vstr << std::endl;
     get_stream_err1() << "          bits: " << device_bits << std::endl;
     get_stream_err1() << "          fp64: " << ( (device_fp64 != 0) ? "yes" : "no" ) << std::endl;
-    get_stream_err1() << "         align: " << alignment   << std::endl;
-    get_stream_err1() << "       n_units: " << n_units     << std::endl;
+    get_stream_err1() << "         align: " << tmp_align   << std::endl;
+    get_stream_err1() << "       n_units: " << tmp_n_units << std::endl;
     }
   
   // contrary to the official OpenCL specification (OpenCL 1.2, sec 4.2 and sec 6.1.1).
@@ -669,9 +672,9 @@ coot_runtime_t::init_kernels(std::vector<cl_kernel>& kernels, const std::string&
 
 inline
 uword
-coot_runtime_t::get_n_compunits() const
+coot_runtime_t::get_n_units() const
   {
-  return n_compunits;
+  return (valid) ? n_units : uword(0);
   }
 
 
@@ -836,6 +839,9 @@ coot_runtime_t::cq_guard::cq_guard()
     {
     coot_extra_debug_print("calling clFinish()");
     clFinish(coot_runtime.get_cq());  // force synchronisation
+    
+    //coot_extra_debug_print("calling clFlush()");
+    //clFlush(coot_runtime.get_cq());  // submit all enqueued commands
     }
   }
 

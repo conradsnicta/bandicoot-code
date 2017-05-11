@@ -48,5 +48,38 @@ sqrt(const T1& A)
   }
 
 
+//
+// exp
+
+template<typename T1>
+coot_warn_unused
+coot_inline
+typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_exp> >::result
+exp(const T1& A)
+  {
+  coot_extra_debug_sigprint();
+  
+  return eOp<T1, eop_exp>(A);
+  }
+
+
+//
+// log
+
+template<typename T1>
+coot_warn_unused
+coot_inline
+typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_log> >::result
+log(const T1& A)
+  {
+  coot_extra_debug_sigprint();
+  
+  return eOp<T1, eop_log>(A);
+  }
+
+
+// TODO: more element-wise functions
+
+
 
 //! @}

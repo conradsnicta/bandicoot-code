@@ -67,17 +67,17 @@ struct coot_config
   
   
   #if defined(COOT_USE_CXX11)
-    static const bool use_cxx11 = true;
+    static const bool cxx11 = true;
   #else
-    static const bool use_cxx11 = false;
+    static const bool cxx11 = false;
   #endif
   
   
   // TODO: may need to link with -lbandicoot anyway, to provide the runtime library
   #if defined(COOT_USE_WRAPPER)
-    static const bool use_wrapper = true;
+    static const bool wrapper = true;
   #else
-    static const bool use_wrapper = false;
+    static const bool wrapper = false;
   #endif
   };
 

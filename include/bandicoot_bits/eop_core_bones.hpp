@@ -50,11 +50,11 @@ class eop_square            : public eop_core<eop_square>            {};
 class eop_sqrt              : public eop_core<eop_sqrt>              {};
 
 // // TODO
-// class eop_log               : public eop_core<eop_log>               {};
+class eop_log               : public eop_core<eop_log>               {};
 // class eop_log2              : public eop_core<eop_log2>              {};
 // class eop_log10             : public eop_core<eop_log10>             {};
 // class eop_trunc_log         : public eop_core<eop_trunc_log>         {};
-// class eop_exp               : public eop_core<eop_exp>               {};
+class eop_exp               : public eop_core<eop_exp>               {};
 // class eop_exp2              : public eop_core<eop_exp2>              {};
 // class eop_exp10             : public eop_core<eop_exp10>             {};
 // class eop_trunc_exp         : public eop_core<eop_trunc_exp>         {};

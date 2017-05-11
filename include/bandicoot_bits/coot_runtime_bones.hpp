@@ -23,7 +23,7 @@ class coot_runtime_t
   coot_aligned cl_device_id     device_id;
   coot_aligned cl_context       context;
   coot_aligned cl_command_queue cq;
-  coot_aligned uword            n_compunits;
+  coot_aligned uword            n_units;
   
   // cl_platform_id   is typedef for struct _cl_platform_id*
   // cl_device_id     is typedef for struct _cl_device_id*
@@ -71,7 +71,7 @@ class coot_runtime_t
   coot_runtime_t&       operator=(const coot_runtime_t&) = delete;
   #endif
   
-  inline uword get_n_compunits() const;
+  inline uword get_n_units() const;
   
   inline bool is_valid()        const;
   inline bool has_64bit_sizet() const;

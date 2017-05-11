@@ -666,11 +666,11 @@ coot_assert_blas_size(const T1& A, const T2& B)
         out << "@ Bandicoot " << coot_version::major << '.' << coot_version::minor << '.' << coot_version::patch;
         if(note.length() > 0)  { out << " (" << note << ')'; }
         out << '\n';
-        out << "@ coot_config::use_wrapper  = " << coot_config::use_wrapper  << '\n';
-        out << "@ coot_config::use_cxx11    = " << coot_config::use_cxx11    << '\n';
-        out << "@ coot_config::lapack       = " << coot_config::lapack       << '\n';
-        out << "@ coot_config::blas         = " << coot_config::blas         << '\n';
-        out << "@ coot_config::extra_code   = " << coot_config::extra_code   << '\n';
+        out << "@ coot_config::wrapper    = " << coot_config::wrapper  << '\n';
+        out << "@ coot_config::cxx11      = " << coot_config::cxx11    << '\n';
+        out << "@ coot_config::lapack     = " << coot_config::lapack       << '\n';
+        out << "@ coot_config::blas       = " << coot_config::blas         << '\n';
+        out << "@ coot_config::extra_code = " << coot_config::extra_code   << '\n';
         out << "@ sizeof(void*)    = " << sizeof(void*)    << '\n';
         out << "@ sizeof(int)      = " << sizeof(int)      << '\n';
         out << "@ sizeof(long)     = " << sizeof(long)     << '\n';

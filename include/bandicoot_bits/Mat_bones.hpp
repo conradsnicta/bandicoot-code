@@ -50,8 +50,7 @@ class Mat : public Base< eT, Mat<eT> >
   
   inline Mat(cl_mem aux_device_mem, const uword in_rows, const uword in_cols);
   
-  inline cl_mem get_device_mem()         const;
-  inline cl_mem get_device_mem_no_sync() const;
+  inline cl_mem get_device_mem(const bool sync = true) const;
   
   inline void  read_device_mem(      eT* dest_memptr, const uword N) const;
   inline void write_device_mem(const eT*  src_memptr, const uword N);
@@ -195,19 +194,6 @@ class Mat : public Base< eT, Mat<eT> >
   
   inline       subview<eT> tail_cols(const uword N);
   inline const subview<eT> tail_cols(const uword N) const;
-  
-  inline void get_submatrix(Mat& X, const uword start_row, const uword start_col, const uword end_row, const uword end_col);  // BUG: for experimental purposes only
-  inline void set_submatrix(Mat& X, const uword start_row, const uword start_col);  // BUG: for experimental purposes only
-  
-  inline void get_sum_all_1(Mat& X);  // BUG: for experimental purposes only
-  inline void get_sum_all_2(Mat& X);  // BUG: for experimental purposes only
-  inline void get_sum_all_3(Mat& X);  // BUG: for experimental purposes only
-  
-  inline void get_sum_colwise(Mat& X);  // BUG: for experimental purposes only
-  inline void get_sum_rowwise(Mat& X);  // BUG: for experimental purposes only
-  
-  inline void get_sum_submat_colwise(Mat& X, const uword start_row, const uword start_col, const uword end_row, const uword end_col);  // BUG: for experimental purposes only
-  inline void get_sum_submat_rowwise(Mat& X, const uword start_row, const uword start_col, const uword end_row, const uword end_col);  // BUG: for experimental purposes only
   
   
   private:
