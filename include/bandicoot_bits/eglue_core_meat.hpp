@@ -54,7 +54,7 @@ eglue_core<eglue_type>::apply(Mat<typename T1::elem_type>& out, const eGlue<T1, 
   
   uword n_elem = out.get_n_elem();
   
-  coot_runtime_t::adapt_val N(n_elem);
+  coot_runtime_t::adapt_uword N(n_elem);
   
   cl_int status = 0;
   

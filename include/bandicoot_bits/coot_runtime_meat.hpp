@@ -865,10 +865,10 @@ coot_runtime_t::cq_guard::~cq_guard()
 
 
 //
-// adapt_val
+// adapt_uword
 
 inline
-coot_runtime_t::adapt_val::adapt_val(const uword val)
+coot_runtime_t::adapt_uword::adapt_uword(const uword val)
   {
   if((sizeof(uword) >= 8) && coot_runtime.has_64bit_sizet())
     {
@@ -882,9 +882,6 @@ coot_runtime_t::adapt_val::adapt_val(const uword val)
     addr   = (void*)(&val32);
     val32  = u32(val);
     
-    if( (sizeof(uword) >= 8) && (val > 0xffffffffU) )
-      {
-      coot_debug_warn("adapt_val: given value doesn't fit into unsigned 32 bit integer");
-      }
+    coot_check_runtime_error( ((sizeof(uword) >= 8) && (val > 0xffffffffU)), "adapt_uword: given value doesn't fit into unsigned 32 bit integer" );
     }
   }

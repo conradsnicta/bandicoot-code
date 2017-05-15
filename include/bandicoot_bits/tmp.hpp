@@ -123,8 +123,8 @@ Mat<eT>::get_sum_all_1(Mat<eT>& X)
   cl_mem X_mem =       X.get_device_mem(false);
   cl_mem A_mem = (*this).get_device_mem(false);
   
-  coot_runtime_t::adapt_val start(0);
-  coot_runtime_t::adapt_val end  (n_elem-1);
+  coot_runtime_t::adapt_uword start(0);
+  coot_runtime_t::adapt_uword end  (n_elem-1);
   
   status = clSetKernelArg(kernel, 0, sizeof(cl_mem),   &X_mem);
   status = clSetKernelArg(kernel, 1, sizeof(cl_mem),   &A_mem);
@@ -294,8 +294,8 @@ Mat<eT>::get_sum_colwise(Mat<eT>& X)
   cl_mem X_mem =       X.get_device_mem(false);
   cl_mem A_mem = (*this).get_device_mem(false);
   
-  coot_runtime_t::adapt_val local_n_rows(n_rows);
-  coot_runtime_t::adapt_val local_n_cols(n_cols);
+  coot_runtime_t::adapt_uword local_n_rows(n_rows);
+  coot_runtime_t::adapt_uword local_n_cols(n_cols);
   
   status = clSetKernelArg(kernel, 0, sizeof(cl_mem),    &X_mem       );
   status = clSetKernelArg(kernel, 1, sizeof(cl_mem),    &A_mem       );
@@ -344,8 +344,8 @@ Mat<eT>::get_sum_rowwise(Mat<eT>& X)
   cl_mem X_mem =       X.get_device_mem(false);
   cl_mem A_mem = (*this).get_device_mem(false);
   
-  coot_runtime_t::adapt_val local_n_rows(n_rows);
-  coot_runtime_t::adapt_val local_n_cols(n_cols);
+  coot_runtime_t::adapt_uword local_n_rows(n_rows);
+  coot_runtime_t::adapt_uword local_n_cols(n_cols);
   
   status |= clSetKernelArg(kernel, 0, sizeof(cl_mem),       &X_mem       );
   status |= clSetKernelArg(kernel, 1, sizeof(cl_mem),       &A_mem       );

@@ -949,8 +949,8 @@ Mat<eT>::eye()
   
   coot_runtime_t::cq_guard guard;
   
-  coot_runtime_t::adapt_val local_n_rows(n_rows);
-  coot_runtime_t::adapt_val local_n_cols(n_cols);
+  coot_runtime_t::adapt_uword local_n_rows(n_rows);
+  coot_runtime_t::adapt_uword local_n_cols(n_cols);
   
   cl_kernel kernel = coot_runtime.get_kernel<eT>(kernel_id::inplace_set_eye);
   

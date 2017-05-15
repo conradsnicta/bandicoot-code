@@ -91,7 +91,7 @@ class coot_runtime_t
   
   class program_wrapper;
   class cq_guard;
-  class adapt_val;
+  class adapt_uword;
   
   friend class cq_guard;  // explicitly allows cq_guard to call lock() and unlock()
   };
@@ -129,7 +129,7 @@ class coot_runtime_t::cq_guard
 
 
 
-class coot_runtime_t::adapt_val
+class coot_runtime_t::adapt_uword
   {
   public:
   
@@ -138,7 +138,7 @@ class coot_runtime_t::adapt_val
   coot_aligned u64    val64;
   coot_aligned u32    val32;
   
-  inline adapt_val(const uword val);
+  inline adapt_uword(const uword val);
   };
 
 

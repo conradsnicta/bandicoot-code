@@ -45,7 +45,7 @@ arrayops::inplace_op_scalar(cl_mem dest, const eT val, const uword n_elem, cl_ke
   
   coot_runtime_t::cq_guard guard;
   
-  coot_runtime_t::adapt_val N(n_elem);
+  coot_runtime_t::adapt_uword N(n_elem);
   
   cl_int status = 0;
   
@@ -146,7 +146,7 @@ arrayops::inplace_op_array(cl_mem dest, cl_mem src, const uword n_elem, cl_kerne
   
   coot_runtime_t::cq_guard guard;
   
-  coot_runtime_t::adapt_val N(n_elem);
+  coot_runtime_t::adapt_uword N(n_elem);
   
   cl_int status = 0;
   

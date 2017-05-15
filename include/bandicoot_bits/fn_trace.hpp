@@ -43,8 +43,8 @@ trace(const Base<typename T1::elem_type, T1>& X)
   cl_mem tmp_mem = tmp.get_device_mem(false);
   cl_mem   A_mem =   A.get_device_mem(false);
   
-  coot_runtime_t::adapt_val n_rows(A.n_rows);
-  coot_runtime_t::adapt_val      N(diag_len);
+  coot_runtime_t::adapt_uword n_rows(A.n_rows);
+  coot_runtime_t::adapt_uword      N(diag_len);
   
   cl_int status = 0;
   

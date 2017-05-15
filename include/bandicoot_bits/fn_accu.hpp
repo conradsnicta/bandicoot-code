@@ -61,8 +61,8 @@ accu(const Base<typename T1::elem_type, T1>& X)
   cl_mem tmp_mem = tmp.get_device_mem(false);
   cl_mem   A_mem =   A.get_device_mem(false);
   
-  coot_runtime_t::adapt_val dev_chunk_size(chunk_size);
-  coot_runtime_t::adapt_val dev_n_chunks  (n_chunks  );
+  coot_runtime_t::adapt_uword dev_chunk_size(chunk_size);
+  coot_runtime_t::adapt_uword dev_n_chunks  (n_chunks  );
   
   status = clSetKernelArg(k1, 0, sizeof(cl_mem),      &tmp_mem           );
   status = clSetKernelArg(k1, 1, sizeof(cl_mem),      &  A_mem           );
@@ -83,9 +83,9 @@ accu(const Base<typename T1::elem_type, T1>& X)
   
   cl_kernel k2 = coot_runtime.get_kernel<eT>(kernel_id::accu_twostage);
   
-  coot_runtime_t::adapt_val dev_out_len(tmp.n_elem);
-  coot_runtime_t::adapt_val dev_A_start(n_chunks*chunk_size);
-  coot_runtime_t::adapt_val dev_A_len  (A.n_elem);
+  coot_runtime_t::adapt_uword dev_out_len(tmp.n_elem);
+  coot_runtime_t::adapt_uword dev_A_start(n_chunks*chunk_size);
+  coot_runtime_t::adapt_uword dev_A_len  (A.n_elem);
   
   status = clSetKernelArg(k2, 0, sizeof(cl_mem),   &tmp_mem        );
   status = clSetKernelArg(k2, 1, dev_out_len.size, dev_out_len.addr);
@@ -134,7 +134,7 @@ accu_simple(const Base<typename T1::elem_type, T1>& X)
   cl_mem tmp_mem = tmp.get_device_mem(false);
   cl_mem   A_mem =   A.get_device_mem(false);
   
-  coot_runtime_t::adapt_val dev_A_len(A.n_elem);
+  coot_runtime_t::adapt_uword dev_A_len(A.n_elem);
   
   status = clSetKernelArg(k1, 0, sizeof(cl_mem), &tmp_mem      );
   status = clSetKernelArg(k1, 1, sizeof(cl_mem), &  A_mem      );

@@ -114,10 +114,10 @@ subview<eT>::inplace_op(const eT val, cl_kernel kernel)
   const uword end_row = aux_row1 + n_rows - 1;
   const uword end_col = aux_col1 + n_cols - 1;
   
-  coot_runtime_t::adapt_val m_end_row(end_row);
-  coot_runtime_t::adapt_val m_end_col(end_col);
+  coot_runtime_t::adapt_uword m_end_row(end_row);
+  coot_runtime_t::adapt_uword m_end_col(end_col);
   
-  coot_runtime_t::adapt_val m_n_rows(m.n_rows);
+  coot_runtime_t::adapt_uword m_n_rows(m.n_rows);
   
   cl_int status = 0;
   
@@ -232,13 +232,13 @@ subview<eT>::inplace_op(const Base<eT,T1>& in, cl_kernel kernel, const char* ide
   
   coot_runtime_t::cq_guard guard;
   
-  coot_runtime_t::adapt_val start_row(aux_row1);
-  coot_runtime_t::adapt_val start_col(aux_col1);
+  coot_runtime_t::adapt_uword start_row(aux_row1);
+  coot_runtime_t::adapt_uword start_col(aux_col1);
   
-  coot_runtime_t::adapt_val m_n_rows(m.n_rows);
+  coot_runtime_t::adapt_uword m_n_rows(m.n_rows);
   
-  coot_runtime_t::adapt_val X_n_rows(X.n_rows);
-  coot_runtime_t::adapt_val X_n_cols(X.n_cols);
+  coot_runtime_t::adapt_uword X_n_rows(X.n_rows);
+  coot_runtime_t::adapt_uword X_n_cols(X.n_cols);
   
   cl_int status = 0;
   

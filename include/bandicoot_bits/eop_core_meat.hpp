@@ -58,7 +58,7 @@ eop_core<eop_type>::apply(Mat<typename T1::elem_type>& out, const eOp<T1, eop_ty
   eT val = x.aux;
   
   uword n_elem = out.get_n_elem();
-  coot_runtime_t::adapt_val N(n_elem);
+  coot_runtime_t::adapt_uword N(n_elem);
   
   cl_int status = 0;
   
