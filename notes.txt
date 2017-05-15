@@ -151,3 +151,39 @@ vectorise()
 
 TODO: get a list of most used functions used by mlpack
 
+zeros
+ones
+eye
+shuffle
+randu
+randn
+abs
+sum
+solve
+mean
+find
+reshape
+qr_econ
+linspace
+diagmat
+trans
+.t()
+norm
+subvec
+randi
+max
+as_scalar
+.col()
+element initialisation
+cube
+exp
+log
+submat
+sort_index
+chol
+vectorise
+fliplr
+fft2
+ifft2
+dot
+join_cols
