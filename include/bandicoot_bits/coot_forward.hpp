@@ -72,6 +72,7 @@ template<typename out_eT, typename T1, typename T2, typename  glue_type> class m
 struct coot_vec_indicator {};
 
 
+class op_sum;
 class op_inv;
 class op_strans;
 class op_htrans;

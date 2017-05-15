@@ -4,34 +4,54 @@
 using namespace std;
 using namespace coot;
 
-// bandicoot_runtime_t bandicoot_runtime;
+// coot_runtime_t coot_runtime;
 
 int
 main()
   {
-  fmat P(8,9);  P.fill(0);
-  fmat Q(6,5);  Q.fill(-1);
+  fmat A(8,9);  A.fill(1);
+  fmat B(5,5);
+  fmat C(9,9);  C.fill(-1);
   
-  for(uword i=0; i<P.n_elem; ++i)
+  for(uword i=0; i<B.n_elem; ++i)
     {
-    P(i) = i+1;
+    B(i) = i+1;
     }
   
-  P.print("P:");
-  Q.print("Q:");
+  A.print("A:");
+  B.print("B:");
+  C.print("C:");
   
-  P.get_colwise_sum(Q);
-  Q.print("Q:");
+  cout << "----" << endl;
   
-  P.get_rowwise_sum(Q);
-  Q.print("Q:");
+  sum(A).print("sum(A):");
   
-  P.get_colwise_sum_submat(Q, 1, 1, P.n_rows-2, P.n_cols-2 );
-  Q.print("Q:");
-  
-  P.get_rowwise_sum_submat(Q, 1, 1, P.n_rows-2, P.n_cols-2 );
-  Q.print("Q:");
-  
+  sum(A,0).print("sum(A,0):");
 
+  sum(A,1).print("sum(A,1):");
+  
+  cout << "sum(sum(A)): " << sum(sum(A)) << endl;
+  
+  cout << "----" << endl;
+  
+  sum(B).print("sum(B):");
+  
+  sum(B,0).print("sum(B,0):");
+
+  sum(B,1).print("sum(B,1):");
+  
+  cout << "sum(sum(B)): " << sum(sum(B)) << endl;
+  
+  cout << "----" << endl;
+  
+  sum(C).print("sum(C):");
+  
+  sum(C,0).print("sum(C,0):");
+
+  sum(C,1).print("sum(C,1):");
+  
+  cout << "sum(sum(C)): " << sum(sum(C)) << endl;
+  
+  
   return 0;
   }

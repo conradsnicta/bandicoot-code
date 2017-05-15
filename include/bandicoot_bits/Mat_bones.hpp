@@ -100,6 +100,14 @@ class Mat : public Base< eT, Mat<eT> >
   template<typename T1, typename T2, typename eglue_type> inline const Mat& operator%=(const eGlue<T1, T2, eglue_type>& X);
   template<typename T1, typename T2, typename eglue_type> inline const Mat& operator/=(const eGlue<T1, T2, eglue_type>& X);
   
+  template<typename T1, typename op_type> inline                   Mat(const Op<T1, op_type>& X);
+  template<typename T1, typename op_type> inline const Mat& operator= (const Op<T1, op_type>& X);
+  template<typename T1, typename op_type> inline const Mat& operator+=(const Op<T1, op_type>& X);
+  template<typename T1, typename op_type> inline const Mat& operator-=(const Op<T1, op_type>& X);
+  template<typename T1, typename op_type> inline const Mat& operator*=(const Op<T1, op_type>& X);
+  template<typename T1, typename op_type> inline const Mat& operator%=(const Op<T1, op_type>& X);
+  template<typename T1, typename op_type> inline const Mat& operator/=(const Op<T1, op_type>& X);
+  
   inline const Mat& fill(const eT val);
   
   inline const Mat& zeros();

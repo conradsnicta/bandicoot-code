@@ -839,6 +839,123 @@ Mat<eT>::operator/=(const eGlue<T1, T2, eglue_type>& X)
 
 
 template<typename eT>
+template<typename T1, typename op_type>
+inline
+Mat<eT>::Mat(const Op<T1, op_type>& X)
+  : n_rows   (0)
+  , n_cols   (0)
+  , n_elem   (0)
+  , vec_state(0)
+  , mem_state(0)
+  {
+  coot_extra_debug_sigprint_this(this);
+  
+  (*this).operator=(X);
+  }
+
+
+
+template<typename eT>
+template<typename T1, typename op_type>
+inline
+const Mat<eT>&
+Mat<eT>::operator=(const Op<T1, op_type>& X)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
+  
+  op_type::apply(*this, X);
+  
+  return *this;
+  }
+
+
+
+template<typename eT>
+template<typename T1, typename op_type>
+inline
+const Mat<eT>&
+Mat<eT>::operator+=(const Op<T1, op_type>& X)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
+  
+  const Mat<eT> m(X);
+  
+  return (*this).operator+=(m);
+  }
+
+
+
+template<typename eT>
+template<typename T1, typename op_type>
+inline
+const Mat<eT>&
+Mat<eT>::operator-=(const Op<T1, op_type>& X)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
+  
+  const Mat<eT> m(X);
+  
+  return (*this).operator-=(m);
+  }
+
+
+
+template<typename eT>
+template<typename T1, typename op_type>
+inline
+const Mat<eT>&
+Mat<eT>::operator*=(const Op<T1, op_type>& X)
+  {
+  coot_extra_debug_sigprint();
+  
+  // TODO: matrix multiplication
+  
+  return *this;
+  }
+
+
+
+template<typename eT>
+template<typename T1, typename op_type>
+inline
+const Mat<eT>&
+Mat<eT>::operator%=(const Op<T1, op_type>& X)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
+  
+  const Mat<eT> m(X);
+  
+  return (*this).operator%=(m);
+  }
+
+
+
+template<typename eT>
+template<typename T1, typename op_type>
+inline
+const Mat<eT>&
+Mat<eT>::operator/=(const Op<T1, op_type>& X)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
+  
+  const Mat<eT> m(X);
+  
+  return (*this).operator/=(m);
+  }
+
+
+
+template<typename eT>
 inline
 const Mat<eT>&
 Mat<eT>::fill(const eT val)
