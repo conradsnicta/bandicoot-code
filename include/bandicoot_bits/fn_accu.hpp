@@ -157,13 +157,65 @@ template<typename eT>
 coot_warn_unused
 inline
 eT
-fn_accu(const subview<eT>& X)
+accu(const subview<eT>& S)
   {
   coot_extra_debug_sigprint();
   
-  // TODO
+  if(S.n_elem == 0)  { return eT(0); }
   
-  return eT(0);
+  Mat<eT> tmp(1, S.n_cols);
+  
+  coot_runtime_t::cq_guard guard;
+  
+  cl_kernel k1 = coot_runtime.get_kernel<eT>(kernel_id::submat_sum_colwise);
+  
+  cl_int status = 0;
+  
+  cl_mem tmp_mem = tmp.get_device_mem(false);
+  cl_mem S_m_mem = S.m.get_device_mem(false);
+  
+  coot_runtime_t::adapt_uword S_m_n_rows(S.m.n_rows);
+  
+  coot_runtime_t::adapt_uword start_row(S.aux_row1);
+  coot_runtime_t::adapt_uword start_col(S.aux_col1);
+  
+  coot_runtime_t::adapt_uword S_n_rows(S.n_rows);
+  coot_runtime_t::adapt_uword S_n_cols(S.n_cols);
+  
+  status |= clSetKernelArg(k1, 0,  sizeof(cl_mem), &tmp_mem       );
+  status |= clSetKernelArg(k1, 1,  sizeof(cl_mem), &S_m_mem       );
+  status |= clSetKernelArg(k1, 2, S_m_n_rows.size, S_m_n_rows.addr);
+  status |= clSetKernelArg(k1, 3,  start_row.size,  start_row.addr);
+  status |= clSetKernelArg(k1, 4,  start_col.size,  start_col.addr);
+  status |= clSetKernelArg(k1, 5,   S_n_rows.size,   S_n_rows.addr);
+  status |= clSetKernelArg(k1, 6,   S_n_cols.size,   S_n_cols.addr);
+  
+  const size_t k1_work_dim       = 1;
+  const size_t k1_work_offset[1] = { 0                };
+  const size_t k1_work_size[1]   = { size_t(S.n_cols) };
+  
+  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), k1, k1_work_dim, k1_work_offset, k1_work_size, NULL, 0, NULL, NULL);
+  
+  coot_check_cl_error(status, "accu()");
+  
+  
+  // combine the column sums
+  
+  cl_kernel k2 = coot_runtime.get_kernel<eT>(kernel_id::accu_simple);
+  
+  status |= clSetKernelArg(k2, 0, sizeof(cl_mem), &tmp_mem     );
+  status |= clSetKernelArg(k2, 1, sizeof(cl_mem), &tmp_mem     );
+  status |= clSetKernelArg(k2, 2,  S_n_cols.size, S_n_cols.addr);
+  
+  const size_t k2_work_dim       = 1;
+  const size_t k2_work_offset[1] = { 0 };
+  const size_t k2_work_size[1]   = { 1 };
+  
+  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), k2, k2_work_dim, k2_work_offset, k2_work_size, NULL, 0, NULL, NULL);
+  
+  coot_check_cl_error(status, "accu()");
+  
+  return tmp(0);
   }
 
 
