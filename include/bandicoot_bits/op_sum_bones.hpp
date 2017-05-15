@@ -25,7 +25,13 @@ class op_sum
   inline static void apply(Mat<typename T1::elem_type>& out, const Op<T1, op_sum>& in);
   
   template<typename eT>
+  inline static void apply(Mat<eT>& out, const Op<subview<eT>,op_sum>& in);
+  
+  template<typename eT>
   inline static void apply_noalias(Mat<eT>& out, const Mat<eT>& A, const uword dim);
+  
+  template<typename eT>
+  inline static void apply_noalias(Mat<eT>& out, const subview<eT>& sv, const uword dim);
   };
 
 
