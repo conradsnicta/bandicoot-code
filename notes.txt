@@ -112,14 +112,14 @@ trans() -> requires Op
 .index_max()
 
 as_scalar() [done]
-accu()
+accu()      [done]
 trace()     [done]
 
-dot(A,B)  -> how to implement this efficiently?
-
-sum(X,dim)
+sum(X,dim) [done]
 min(X,dim)
 max(X,dim)
+
+dot(A,B)  -> how to implement this efficiently?
 
 .zeros() [done]
 .ones()  [done]
@@ -140,7 +140,8 @@ abs()
 norm()
 repmat()
 
-log()
+exp() [done]
+log() [done]
 clamp()
 diagmat()
 diagvec()
