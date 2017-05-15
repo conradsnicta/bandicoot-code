@@ -161,6 +161,8 @@ accu(const subview<eT>& S)
   {
   coot_extra_debug_sigprint();
   
+  // TODO: implement specialised handling for two cases: (i) n_cols = 1, (ii) n_rows = 1
+  
   if(S.n_elem == 0)  { return eT(0); }
   
   Mat<eT> tmp(1, S.n_cols);
