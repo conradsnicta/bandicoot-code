@@ -163,6 +163,8 @@ accu(const subview<eT>& S)
   
   // TODO: implement specialised handling for two cases: (i) n_cols = 1, (ii) n_rows = 1
   
+  coot_debug_check( (coot_runtime.is_valid() == false), "coot_runtime not valid" );
+  
   if(S.n_elem == 0)  { return eT(0); }
   
   Mat<eT> tmp(1, S.n_cols);
