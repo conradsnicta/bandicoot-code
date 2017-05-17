@@ -1,14 +1,14 @@
 **About**
-* Bandicoot is a C++ linear algebra library for GPUs, interfacing OpenCL / CUDA
-* Bandicoot aims to provide the same API and syntax as the [Armadillo library](http://arma.sourceforge.net), but using matrices and vectors stored in GPU accessible memory
+* Bandicoot is a GPU accelerator add-on for the [Armadillo](http://arma.sourceforge.net) C++ linear algebra library
+* Bandicoot provides a set of functions (such as matrix decompositions) which process Armadillo matrices on GPUs
 * Bandicoot is currently a **work-in-progress** and hence currently only for experimental use
 <br>
 <br>
 
 **Requirements** (subject to change)
-* OpenCL 1.2+ (note: CUDA provides OpenCL even though NVIDIA doesn't advertise this)
-* clBLAS 2.12+ https://github.com/clMathLibraries/clBLAS
-* Armadillo 7.800+ http://arma.sourceforge.net
+* Armadillo 7.900 or later http://arma.sourceforge.net
+* OpenCL - from AMD (AMDGPU-PRO), Intel (Beignet), or NVIDIA (via CUDA), or any conforming implementation
+* clBLAS - https://github.com/clMathLibraries/clBLAS
 <br>
 <br>
 
