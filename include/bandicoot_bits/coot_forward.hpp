@@ -22,8 +22,6 @@ using std::size_t;
 template<typename elem_type, typename derived> struct Base;
 template<typename elem_type, typename derived> struct BaseCube;
 
-template<typename eT> class fakeMat;
-
 template<typename eT> class MatValProxy;
 
 template<typename eT> class Mat;

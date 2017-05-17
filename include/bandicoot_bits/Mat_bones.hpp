@@ -52,8 +52,8 @@ class Mat : public Base< eT, Mat<eT> >
   
   inline cl_mem get_device_mem(const bool sync = true) const;
   
-  inline void  read_device_mem(      eT* dest_memptr, const uword N) const;
-  inline void write_device_mem(const eT*  src_memptr, const uword N);
+  inline void  copy_from_device_mem(      eT* dest_cpu_memptr, const uword N) const;
+  inline void  copy_to_device_mem  (const eT*  src_cpu_memptr, const uword N);
   
   inline const Mat& operator= (const eT val);
   inline const Mat& operator+=(const eT val);

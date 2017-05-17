@@ -97,7 +97,7 @@ Mat<eT>::get_device_mem(const bool sync) const
 template<typename eT>
 inline
 void
-Mat<eT>::read_device_mem(eT* dest_memptr, const uword N) const
+Mat<eT>::copy_from_device_mem(eT* dest_cpu_memptr, const uword N) const
   {
   coot_extra_debug_sigprint();
   
@@ -108,9 +108,9 @@ Mat<eT>::read_device_mem(eT* dest_memptr, const uword N) const
   const uword n_elem_mod = (std::min)(n_elem, N);
   
   // use a blocking call
-  const cl_int status = clEnqueueReadBuffer(coot_runtime.get_cq(), device_mem, CL_TRUE, 0, sizeof(eT)*n_elem_mod, dest_memptr, 0, NULL, NULL);
+  const cl_int status = clEnqueueReadBuffer(coot_runtime.get_cq(), device_mem, CL_TRUE, 0, sizeof(eT)*n_elem_mod, dest_cpu_memptr, 0, NULL, NULL);
   
-  coot_check_runtime_error( (status != CL_SUCCESS), "Mat::read_device_mem(): couldn't access device memory" );
+  coot_check_runtime_error( (status != CL_SUCCESS), "Mat::copy_from_device_mem(): couldn't access device memory" );
   }
 
 
@@ -118,7 +118,7 @@ Mat<eT>::read_device_mem(eT* dest_memptr, const uword N) const
 template<typename eT>
 inline
 void
-Mat<eT>::write_device_mem(const eT* src_memptr, const uword N)
+Mat<eT>::copy_to_device_mem(const eT* src_cpu_memptr, const uword N)
   {
   coot_extra_debug_sigprint();
   
@@ -129,7 +129,7 @@ Mat<eT>::write_device_mem(const eT* src_memptr, const uword N)
   const uword n_elem_mod = (std::min)(n_elem, N);
   
   // use a blocking call
-  cl_int status = clEnqueueWriteBuffer(coot_runtime.get_cq(), device_mem, CL_TRUE, 0, sizeof(eT)*n_elem_mod, src_memptr, 0, NULL, NULL);
+  cl_int status = clEnqueueWriteBuffer(coot_runtime.get_cq(), device_mem, CL_TRUE, 0, sizeof(eT)*n_elem_mod, src_cpu_memptr, 0, NULL, NULL);
   
   coot_check_runtime_error( (status != CL_SUCCESS), "Mat::write_device_mem(): couldn't access device memory" );
   }
@@ -1168,18 +1168,15 @@ Mat<eT>::impl_print(const std::string extra_text) const
   {
   coot_extra_debug_sigprint();
   
-  if(extra_text.length() != 0)
+  try
     {
-    const std::streamsize orig_width = COOT_DEFAULT_OSTREAM.width();
+    arma::Mat<eT> tmp(n_rows,n_cols);
     
-    COOT_DEFAULT_OSTREAM << extra_text << '\n';
-  
-    COOT_DEFAULT_OSTREAM.width(orig_width);
+    (*this).copy_from_device_mem( tmp.memptr(), n_elem);
+    
+    tmp.print(extra_text);
     }
-  
-  fakeMat<eT> tmp(*this);
-  
-  coot_ostream::print(COOT_DEFAULT_OSTREAM, tmp, true);
+  catch(...) {}
   }
 
 

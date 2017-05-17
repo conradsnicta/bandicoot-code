@@ -16,24 +16,16 @@
 #ifndef BANDICOOT_INCLUDES
 #define BANDICOOT_INCLUDES
 
+#include <armadillo>
 
-#include <cstdlib>
-#include <cstring>
-#include <climits>
-#include <cmath>
-#include <ctime>
-#include <cstdio>
+#if (ARMA_VERSION_MAJOR < 7)
+  #error "Armadillo version 7.100 or later is required"
+ // TODO: use a more fine-grained minimum version (eg. 6.500)
+#endif
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <stdexcept>
-#include <new>
-#include <limits>
-#include <algorithm>
-#include <complex>
-#include <vector>
-#include <utility>
+#if !defined(ARMA_USE_U64S64)
+  #pragma message("WARNING: present installation of Armadillo doesn't have 64 bit integers enabled");
+#endif
 
 
 #undef  CL_USE_DEPRECATED_OPENCL_1_2_APIS
@@ -46,43 +38,27 @@
 #endif
 
 
-#if ( defined(__unix__) || defined(__unix) || defined(_POSIX_C_SOURCE) || (defined(__APPLE__) && defined(__MACH__)) ) && !defined(_WIN32)
-  #include <unistd.h>
-#endif
-
-
-#if (defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 200112L))
-  #include <sys/time.h>
-#endif
-
-
-// TODO: make this conditional on clBLAS being presents
+// TODO: make this conditional on clBLAS being present
 #include <clBLAS.h>
 
 
-#if (__cplusplus >= 201103L)
+#if defined(ARMA_USE_CXX11)
   #undef  COOT_USE_CXX11
   #define COOT_USE_CXX11
 #endif
 
+
+// TODO: the following includes are probably not necessary as a lot of Armadillo functionality is being reused
 
 #include "bandicoot_bits/config.hpp"
 #include "bandicoot_bits/compiler_setup.hpp"
 
 
 #if defined(COOT_USE_CXX11)
-  #include <initializer_list>
-  #include <cstdint>
-  #include <random>
-  #include <functional>
-  #include <chrono>
-  #include <type_traits>
   #include <mutex>
 #endif
 
-
-// stuff that is not in the coot namespace
-// #include "bandicoot_bits/.hpp"
+// TODO: include any stuff here that is not meant to be in the coot namespace
 
 
 //! \namespace coot namespace for bandicoot classes and functions
@@ -121,7 +97,6 @@ namespace coot
   
   #include "bandicoot_bits/Base_bones.hpp"
   
-  #include "bandicoot_bits/fakeMat_bones.hpp"
   #include "bandicoot_bits/MatValProxy_bones.hpp"
   #include "bandicoot_bits/Mat_bones.hpp"
   #include "bandicoot_bits/SizeMat_bones.hpp"
@@ -164,12 +139,6 @@ namespace coot
   
   
   //
-  // ostream
-  
-  #include "bandicoot_bits/coot_ostream_bones.hpp"
-  #include "bandicoot_bits/coot_ostream_meat.hpp"
-  
-  //
   // operators
   
   #include "bandicoot_bits/operator_times.hpp"
@@ -199,7 +168,6 @@ namespace coot
   
   #include "bandicoot_bits/Base_meat.hpp"
   
-  #include "bandicoot_bits/fakeMat_meat.hpp"
   #include "bandicoot_bits/MatValProxy_meat.hpp"
   #include "bandicoot_bits/Mat_meat.hpp"
   #include "bandicoot_bits/SizeMat_meat.hpp"
