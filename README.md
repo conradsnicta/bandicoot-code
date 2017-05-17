@@ -7,7 +7,8 @@
 
 **Requirements** (subject to change)
 * Armadillo 7.900 or later http://arma.sourceforge.net
-* OpenCL - from AMD (AMDGPU-PRO), Intel (Beignet), or NVIDIA (via CUDA), or any conforming implementation
+* OpenCL / CUDA
+  - eg. AMDGPU-PRO (for AMD hardware), Beignet (for Intel hardware), or CUDA (for NVIDIA hardware), or POCL
 * clBLAS - https://github.com/clMathLibraries/clBLAS
 <br>
 <br>
