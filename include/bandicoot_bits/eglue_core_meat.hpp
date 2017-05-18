@@ -39,14 +39,14 @@ eglue_core<eglue_type>::apply(Mat<typename T1::elem_type>& out, const eGlue<T1, 
   const Mat<eT>& A = UA.M;
   const Mat<eT>& B = UB.M;
   
-  coot_runtime_t::cq_guard guard;
+  coot_rt_t::cq_guard guard;
   
   cl_kernel kernel;
   
-       if(is_same_type<eglue_type, eglue_plus >::yes)  { kernel = coot_runtime.get_kernel<eT>(kernel_id::equ_array_plus_array ); }
-  else if(is_same_type<eglue_type, eglue_minus>::yes)  { kernel = coot_runtime.get_kernel<eT>(kernel_id::equ_array_minus_array); }
-  else if(is_same_type<eglue_type, eglue_div  >::yes)  { kernel = coot_runtime.get_kernel<eT>(kernel_id::equ_array_div_array  ); }
-  else if(is_same_type<eglue_type, eglue_schur>::yes)  { kernel = coot_runtime.get_kernel<eT>(kernel_id::equ_array_mul_array  ); }
+       if(is_same_type<eglue_type, eglue_plus >::yes)  { kernel = coot_rt.get_kernel<eT>(kernel_id::equ_array_plus_array ); }
+  else if(is_same_type<eglue_type, eglue_minus>::yes)  { kernel = coot_rt.get_kernel<eT>(kernel_id::equ_array_minus_array); }
+  else if(is_same_type<eglue_type, eglue_div  >::yes)  { kernel = coot_rt.get_kernel<eT>(kernel_id::equ_array_div_array  ); }
+  else if(is_same_type<eglue_type, eglue_schur>::yes)  { kernel = coot_rt.get_kernel<eT>(kernel_id::equ_array_mul_array  ); }
   
   cl_mem out_dev_mem = out.get_dev_mem(false);
   cl_mem   A_dev_mem =   A.get_dev_mem(false);
@@ -54,7 +54,7 @@ eglue_core<eglue_type>::apply(Mat<typename T1::elem_type>& out, const eGlue<T1, 
   
   uword n_elem = out.get_n_elem();
   
-  coot_runtime_t::adapt_uword N(n_elem);
+  coot_rt_t::adapt_uword N(n_elem);
   
   cl_int status = 0;
   
@@ -65,7 +65,7 @@ eglue_core<eglue_type>::apply(Mat<typename T1::elem_type>& out, const eGlue<T1, 
   
   size_t global_work_size = size_t(n_elem);
   
-  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, 1, NULL, &global_work_size, NULL, 0, NULL, NULL);
+  status |= clEnqueueNDRangeKernel(coot_rt.get_cq(), kernel, 1, NULL, &global_work_size, NULL, 0, NULL, NULL);
   
   coot_check_runtime_error( (status != CL_SUCCESS), "eglue_core: couldn't execute kernel" );
   }

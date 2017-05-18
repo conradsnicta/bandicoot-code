@@ -15,7 +15,7 @@
 
 
 inline
-coot_runtime_t::~coot_runtime_t()
+coot_rt_t::~coot_rt_t()
   {
   coot_extra_debug_sigprint_this(this);
   
@@ -25,7 +25,7 @@ coot_runtime_t::~coot_runtime_t()
 
 
 inline
-coot_runtime_t::coot_runtime_t()
+coot_rt_t::coot_rt_t()
   {
   coot_extra_debug_sigprint_this(this);
   
@@ -49,7 +49,7 @@ coot_runtime_t::coot_runtime_t()
     {
     std::stringstream ss;
     
-    ss << "coot_runtime: couldn't setup OpenCL: " << errmsg;
+    ss << "coot_rt: couldn't setup OpenCL: " << errmsg;
     coot_warn(ss.str());
     }
   
@@ -58,19 +58,19 @@ coot_runtime_t::coot_runtime_t()
   if(status != false)
     {
     status = init_kernels<u32>(u32_kernels, kernel_src::get_source(), kernel_id::get_names());
-    if(status == false)  { coot_warn("coot_runtime: couldn't setup OpenCL kernels"); }
+    if(status == false)  { coot_warn("coot_rt: couldn't setup OpenCL kernels"); }
     
     status = init_kernels<s32>(s32_kernels, kernel_src::get_source(), kernel_id::get_names());
-    if(status == false)  { coot_warn("coot_runtime: couldn't setup OpenCL kernels"); }
+    if(status == false)  { coot_warn("coot_rt: couldn't setup OpenCL kernels"); }
     
     status = init_kernels<u64>(u64_kernels, kernel_src::get_source(), kernel_id::get_names());
-    if(status == false)  { coot_warn("coot_runtime: couldn't setup OpenCL kernels"); }
+    if(status == false)  { coot_warn("coot_rt: couldn't setup OpenCL kernels"); }
     
     status = init_kernels<s64>(s64_kernels, kernel_src::get_source(), kernel_id::get_names());
-    if(status == false)  { coot_warn("coot_runtime: couldn't setup OpenCL kernels"); }
+    if(status == false)  { coot_warn("coot_rt: couldn't setup OpenCL kernels"); }
     
     status = init_kernels<float>(f_kernels, kernel_src::get_source(), kernel_id::get_names());
-    if(status == false)  { coot_warn("coot_runtime: couldn't setup OpenCL kernels"); }
+    if(status == false)  { coot_warn("coot_rt: couldn't setup OpenCL kernels"); }
     }
   
   // TODO: determine if 64 bit floats are supported
@@ -81,7 +81,7 @@ coot_runtime_t::coot_runtime_t()
     // TODO: make call to clblasSetup() conditional on clBLAS being available
     cl_int clblas_status = clblasSetup();
     
-    if(clblas_status != CL_SUCCESS)  { coot_warn("coot_runtime: couldn't setup clBLAS"); }
+    if(clblas_status != CL_SUCCESS)  { coot_warn("coot_rt: couldn't setup clBLAS"); }
     }
   
   if(status == true)
@@ -98,7 +98,7 @@ coot_runtime_t::coot_runtime_t()
 
 inline
 void
-coot_runtime_t::lock()
+coot_rt_t::lock()
   {
   coot_extra_debug_sigprint();
   
@@ -114,7 +114,7 @@ coot_runtime_t::lock()
 
 inline
 void
-coot_runtime_t::unlock()
+coot_rt_t::unlock()
   {
   coot_extra_debug_sigprint();
   
@@ -130,7 +130,7 @@ coot_runtime_t::unlock()
 
 inline
 void
-coot_runtime_t::cleanup_cl()
+coot_rt_t::cleanup_cl()
   {
   coot_extra_debug_sigprint();
   
@@ -154,7 +154,7 @@ coot_runtime_t::cleanup_cl()
 
 inline
 bool
-coot_runtime_t::init_cl(std::string& out_errmsg, const bool manual_selection, const uword wanted_platform_id, const uword wanted_device_id)
+coot_rt_t::init_cl(std::string& out_errmsg, const bool manual_selection, const uword wanted_platform_id, const uword wanted_device_id)
   {
   coot_extra_debug_sigprint();
   
@@ -358,7 +358,7 @@ coot_runtime_t::init_cl(std::string& out_errmsg, const bool manual_selection, co
 
 inline
 bool
-coot_runtime_t::interrogate_device(const bool print_details)
+coot_rt_t::interrogate_device(const bool print_details)
   {
   coot_extra_debug_sigprint();
   
@@ -395,7 +395,7 @@ coot_runtime_t::interrogate_device(const bool print_details)
   
   if(print_details)
     {
-    get_stream_err1() << "coot_runtime::interrogate_device():" << std::endl;
+    get_stream_err1() << "coot_rt::interrogate_device():" << std::endl;
     
     if(device_type != CL_DEVICE_TYPE_GPU)
       {
@@ -494,7 +494,7 @@ coot_runtime_t::interrogate_device(const bool print_details)
       }
     }
   
-  if(found_width == false)  { coot_warn("coot_runtime: size_t has unsupported width; using 32 bit word"); }
+  if(found_width == false)  { coot_warn("coot_rt: size_t has unsupported width; using 32 bit word"); }
   
   if(tmp_dev_mem != NULL)  { clReleaseMemObject(tmp_dev_mem); }
   if(tmp_kernel  != NULL)  { clReleaseKernel(tmp_kernel);        }
@@ -508,7 +508,7 @@ coot_runtime_t::interrogate_device(const bool print_details)
 template<typename eT>
 inline
 bool
-coot_runtime_t::init_kernels(std::vector<cl_kernel>& kernels, const std::string& source, const std::vector<std::string>& names)
+coot_rt_t::init_kernels(std::vector<cl_kernel>& kernels, const std::string& source, const std::vector<std::string>& names)
   {
   coot_extra_debug_sigprint();
   
@@ -516,7 +516,7 @@ coot_runtime_t::init_kernels(std::vector<cl_kernel>& kernels, const std::string&
   
   // TODO: get info using clquery ?
   
-  coot_runtime_t::program_wrapper prog_holder;  // program_wrapper will automatically call clReleaseProgram() when it goes out of scope
+  coot_rt_t::program_wrapper prog_holder;  // program_wrapper will automatically call clReleaseProgram() when it goes out of scope
   
 
   // cl_program clCreateProgramWithSource(cl_context context, cl_uint count, const char **strings, const size_t *lengths, cl_int *errcode_ret);
@@ -536,7 +536,7 @@ coot_runtime_t::init_kernels(std::vector<cl_kernel>& kernels, const std::string&
     {
     cout << "status: " << coot_cl_error::as_string(status) << endl;
     
-    std::cout << "coot_runtime::init_kernels(): couldn't create program" << std::endl;
+    std::cout << "coot_rt::init_kernels(): couldn't create program" << std::endl;
     return false;
     }
   
@@ -637,8 +637,8 @@ coot_runtime_t::init_kernels(std::vector<cl_kernel>& kernels, const std::string&
     char buffer[10240];  // TODO: use std::vector<char> or podarray
 
     clGetProgramBuildInfo(prog_holder.prog, device_id, CL_PROGRAM_BUILD_LOG, sizeof(buffer), buffer, &len);
-    std::cout << "coot_runtime::init_kernels(): couldn't build program;"              << std::endl;
-    std::cout << "coot_runtime::init_kernels(): output from clGetProgramBuildInfo():" << std::endl;
+    std::cout << "coot_rt::init_kernels(): couldn't build program;"              << std::endl;
+    std::cout << "coot_rt::init_kernels(): output from clGetProgramBuildInfo():" << std::endl;
     std::cout << buffer << std::endl;
     
     return false;
@@ -672,7 +672,7 @@ coot_runtime_t::init_kernels(std::vector<cl_kernel>& kernels, const std::string&
 
 inline
 uword
-coot_runtime_t::get_n_units() const
+coot_rt_t::get_n_units() const
   {
   return (valid) ? n_units : uword(0);
   }
@@ -681,7 +681,7 @@ coot_runtime_t::get_n_units() const
 
 inline
 bool
-coot_runtime_t::is_valid() const
+coot_rt_t::is_valid() const
   {
   return valid;
   }
@@ -690,7 +690,7 @@ coot_runtime_t::is_valid() const
 
 inline
 bool
-coot_runtime_t::has_64bit_sizet() const
+coot_rt_t::has_64bit_sizet() const
   {
   return device_64bit_sizet;
   }
@@ -699,7 +699,7 @@ coot_runtime_t::has_64bit_sizet() const
 
 inline
 bool
-coot_runtime_t::has_64bit_float() const
+coot_rt_t::has_64bit_float() const
   {
   return device_64bit_float;
   }
@@ -709,24 +709,24 @@ coot_runtime_t::has_64bit_float() const
 template<typename eT>
 inline
 cl_mem
-coot_runtime_t::acquire_memory(const uword n_elem)
+coot_rt_t::acquire_memory(const uword n_elem)
   {
   coot_extra_debug_sigprint();
   
-  coot_check_runtime_error( (valid == false), "coot_runtime::acquire_memory(): runtime not valid" );
+  coot_check_runtime_error( (valid == false), "coot_rt::acquire_memory(): runtime not valid" );
   
   if(n_elem == 0)  { return NULL; }
   
   coot_debug_check
    (
    ( size_t(n_elem) > (std::numeric_limits<size_t>::max() / sizeof(eT)) ),
-   "coot_runtime::acquire_memory(): requested size is too large"
+   "coot_rt::acquire_memory(): requested size is too large"
    );
   
   cl_int status = 0;
   cl_mem dev_mem = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(eT)*(std::max)(uword(1), n_elem), NULL, &status);
   
-  coot_check_bad_alloc( ((status != CL_SUCCESS) || (dev_mem == NULL)), "coot_runtime::acquire_memory(): not enough memory on device" );
+  coot_check_bad_alloc( ((status != CL_SUCCESS) || (dev_mem == NULL)), "coot_rt::acquire_memory(): not enough memory on device" );
   
   return dev_mem;
   }
@@ -735,11 +735,11 @@ coot_runtime_t::acquire_memory(const uword n_elem)
 
 inline
 void
-coot_runtime_t::release_memory(cl_mem dev_mem)
+coot_rt_t::release_memory(cl_mem dev_mem)
   {
   coot_extra_debug_sigprint();
   
-  coot_debug_check( (valid == false), "coot_runtime not valid" );
+  coot_debug_check( (valid == false), "coot_rt not valid" );
   
   if(dev_mem)  { clReleaseMemObject(dev_mem); }
   }
@@ -748,11 +748,11 @@ coot_runtime_t::release_memory(cl_mem dev_mem)
 
 inline
 cl_context
-coot_runtime_t::get_context()
+coot_rt_t::get_context()
   {
   coot_extra_debug_sigprint();
   
-  coot_debug_check( (valid == false), "coot_runtime not valid" );
+  coot_debug_check( (valid == false), "coot_rt not valid" );
   
   return context;
   }
@@ -761,11 +761,11 @@ coot_runtime_t::get_context()
 
 inline
 cl_command_queue
-coot_runtime_t::get_cq()
+coot_rt_t::get_cq()
   {
   coot_extra_debug_sigprint();
   
-  coot_debug_check( (valid == false), "coot_runtime not valid" );
+  coot_debug_check( (valid == false), "coot_rt not valid" );
   
   return cq;
   }
@@ -775,11 +775,11 @@ coot_runtime_t::get_cq()
 template<typename eT>
 inline
 cl_kernel
-coot_runtime_t::get_kernel(const kernel_id::enum_id num)
+coot_rt_t::get_kernel(const kernel_id::enum_id num)
   {
   coot_extra_debug_sigprint();
   
-  coot_debug_check( (valid == false), "coot_runtime not valid" );
+  coot_debug_check( (valid == false), "coot_rt not valid" );
   
        if(is_same_type<eT,u32   >::yes)  { return u32_kernels.at(num); }
   else if(is_same_type<eT,s32   >::yes)  { return s32_kernels.at(num); }
@@ -793,9 +793,9 @@ coot_runtime_t::get_kernel(const kernel_id::enum_id num)
 
 
 // TODO: should this be in the run-time library, to ensure only one copy of the runtime is active?
-// TODO: don't instantiate coot_runtime_t if COOT_USE_WRAPPER is enabled?
+// TODO: don't instantiate coot_rt_t if COOT_USE_WRAPPER is enabled?
 // TODO: put instantiation in an anonymous namespace to avoid linking conflicts?
-coot_runtime_t coot_runtime;
+coot_rt_t coot_rt;
 
 
 
@@ -803,7 +803,7 @@ coot_runtime_t coot_runtime;
 // program_wrapper
 
 inline
-coot_runtime_t::program_wrapper::program_wrapper()
+coot_rt_t::program_wrapper::program_wrapper()
   {
   coot_extra_debug_sigprint();
   
@@ -813,7 +813,7 @@ coot_runtime_t::program_wrapper::program_wrapper()
 
 
 inline
-coot_runtime_t::program_wrapper::~program_wrapper()
+coot_rt_t::program_wrapper::~program_wrapper()
   {
   coot_extra_debug_sigprint();
   
@@ -829,36 +829,36 @@ coot_runtime_t::program_wrapper::~program_wrapper()
 // cq_guard
 
 inline
-coot_runtime_t::cq_guard::cq_guard()
+coot_rt_t::cq_guard::cq_guard()
   {
   coot_extra_debug_sigprint();
   
-  coot_runtime.lock();
+  coot_rt.lock();
   
-  if(coot_runtime.is_valid())
+  if(coot_rt.is_valid())
     {
     coot_extra_debug_print("calling clFinish()");
-    clFinish(coot_runtime.get_cq());  // force synchronisation
+    clFinish(coot_rt.get_cq());  // force synchronisation
     
     //coot_extra_debug_print("calling clFlush()");
-    //clFlush(coot_runtime.get_cq());  // submit all enqueued commands
+    //clFlush(coot_rt.get_cq());  // submit all enqueued commands
     }
   }
 
 
 
 inline
-coot_runtime_t::cq_guard::~cq_guard()
+coot_rt_t::cq_guard::~cq_guard()
   {
   coot_extra_debug_sigprint();
   
-  if(coot_runtime.is_valid())
+  if(coot_rt.is_valid())
     {
     coot_extra_debug_print("calling clFlush()");
-    clFlush(coot_runtime.get_cq());  // submit all enqueued commands
+    clFlush(coot_rt.get_cq());  // submit all enqueued commands
     }
   
-  coot_runtime.unlock();
+  coot_rt.unlock();
   }
 
 
@@ -868,9 +868,9 @@ coot_runtime_t::cq_guard::~cq_guard()
 // adapt_uword
 
 inline
-coot_runtime_t::adapt_uword::adapt_uword(const uword val)
+coot_rt_t::adapt_uword::adapt_uword(const uword val)
   {
-  if((sizeof(uword) >= 8) && coot_runtime.has_64bit_sizet())
+  if((sizeof(uword) >= 8) && coot_rt.has_64bit_sizet())
     {
     size  = sizeof(u64);
     addr  = (void*)(&val64);

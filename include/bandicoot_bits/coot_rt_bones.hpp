@@ -15,7 +15,7 @@
 
 
 // TODO: if this is placed into a run-time library and executed there, what happens when two programs use the run-time library at the same time?
-class coot_runtime_t
+class coot_rt_t
   {
   private:
   
@@ -63,12 +63,12 @@ class coot_runtime_t
   
   public:
   
-  inline ~coot_runtime_t();
-  inline  coot_runtime_t();
+  inline ~coot_rt_t();
+  inline  coot_rt_t();
   
   #if defined(COOT_USE_CXX11)
-                   coot_runtime_t(const coot_runtime_t&) = delete;
-  coot_runtime_t&       operator=(const coot_runtime_t&) = delete;
+                   coot_rt_t(const coot_rt_t&) = delete;
+  coot_rt_t&       operator=(const coot_rt_t&) = delete;
   #endif
   
   inline uword get_n_units() const;
@@ -98,7 +98,7 @@ class coot_runtime_t
 
 
 
-class coot_runtime_t::program_wrapper
+class coot_rt_t::program_wrapper
   {
   public:
   
@@ -114,7 +114,7 @@ class coot_runtime_t::program_wrapper
   };
 
 
-class coot_runtime_t::cq_guard
+class coot_rt_t::cq_guard
   {
   public:
   
@@ -129,7 +129,7 @@ class coot_runtime_t::cq_guard
 
 
 
-class coot_runtime_t::adapt_uword
+class coot_rt_t::adapt_uword
   {
   public:
   

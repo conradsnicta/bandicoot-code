@@ -25,11 +25,11 @@ arrayops::copy(cl_mem dest, cl_mem src, const uword n_elem)
   {
   coot_extra_debug_sigprint();
   
-  coot_runtime_t::cq_guard guard;
+  coot_rt_t::cq_guard guard;
   
   coot_extra_debug_print("clEnqueueCopyBuffer()");
   
-  cl_int status = clEnqueueCopyBuffer(coot_runtime.get_cq(), src, dest, size_t(0), size_t(0), sizeof(eT)*size_t(n_elem), cl_uint(0), NULL, NULL);
+  cl_int status = clEnqueueCopyBuffer(coot_rt.get_cq(), src, dest, size_t(0), size_t(0), sizeof(eT)*size_t(n_elem), cl_uint(0), NULL, NULL);
   
   coot_check_runtime_error( (status != 0), "arrayops::copy(): couldn't copy buffer" );
   }
@@ -43,9 +43,9 @@ arrayops::inplace_op_scalar(cl_mem dest, const eT val, const uword n_elem, cl_ke
   {
   coot_extra_debug_sigprint();
   
-  coot_runtime_t::cq_guard guard;
+  coot_rt_t::cq_guard guard;
   
-  coot_runtime_t::adapt_uword N(n_elem);
+  coot_rt_t::adapt_uword N(n_elem);
   
   cl_int status = 0;
   
@@ -57,7 +57,7 @@ arrayops::inplace_op_scalar(cl_mem dest, const eT val, const uword n_elem, cl_ke
   
   coot_extra_debug_print("clEnqueueNDRangeKernel()");
   
-  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, 1, NULL, global_work_size, NULL, 0, NULL, NULL);
+  status |= clEnqueueNDRangeKernel(coot_rt.get_cq(), kernel, 1, NULL, global_work_size, NULL, 0, NULL, NULL);
   
   coot_check_runtime_error( (status != 0), "arrayops::inplace_op_scalar(): couldn't execute kernel" );
   }
@@ -71,7 +71,7 @@ arrayops::inplace_set_scalar(cl_mem dest, const eT val, const uword n_elem)
   {
   coot_extra_debug_sigprint();
   
-  cl_kernel kernel = coot_runtime.get_kernel<eT>(kernel_id::inplace_set_scalar);
+  cl_kernel kernel = coot_rt.get_kernel<eT>(kernel_id::inplace_set_scalar);
   
   arrayops::inplace_op_scalar(dest, val, n_elem, kernel);
   }
@@ -85,7 +85,7 @@ arrayops::inplace_plus_scalar(cl_mem dest, const eT val, const uword n_elem)
   {
   coot_extra_debug_sigprint();
   
-  cl_kernel kernel = coot_runtime.get_kernel<eT>(kernel_id::inplace_plus_scalar);
+  cl_kernel kernel = coot_rt.get_kernel<eT>(kernel_id::inplace_plus_scalar);
   
   arrayops::inplace_op_scalar(dest, val, n_elem, kernel);
   }
@@ -100,7 +100,7 @@ arrayops::inplace_minus_scalar(cl_mem dest, const eT val, const uword n_elem)
   {
   coot_extra_debug_sigprint();
   
-  cl_kernel kernel = coot_runtime.get_kernel<eT>(kernel_id::inplace_minus_scalar);
+  cl_kernel kernel = coot_rt.get_kernel<eT>(kernel_id::inplace_minus_scalar);
   
   arrayops::inplace_op_scalar(dest, val, n_elem, kernel);
   }
@@ -115,7 +115,7 @@ arrayops::inplace_mul_scalar(cl_mem dest, const eT val, const uword n_elem)
   {
   coot_extra_debug_sigprint();
   
-  cl_kernel kernel = coot_runtime.get_kernel<eT>(kernel_id::inplace_mul_scalar);
+  cl_kernel kernel = coot_rt.get_kernel<eT>(kernel_id::inplace_mul_scalar);
   
   arrayops::inplace_op_scalar(dest, val, n_elem, kernel);
   }
@@ -130,7 +130,7 @@ arrayops::inplace_div_scalar(cl_mem dest, const eT val, const uword n_elem)
   {
   coot_extra_debug_sigprint();
   
-  cl_kernel kernel = coot_runtime.get_kernel<eT>(kernel_id::inplace_div_scalar);
+  cl_kernel kernel = coot_rt.get_kernel<eT>(kernel_id::inplace_div_scalar);
   
   arrayops::inplace_op_scalar(dest, val, n_elem, kernel);
   }
@@ -144,9 +144,9 @@ arrayops::inplace_op_array(cl_mem dest, cl_mem src, const uword n_elem, cl_kerne
   {
   coot_extra_debug_sigprint();
   
-  coot_runtime_t::cq_guard guard;
+  coot_rt_t::cq_guard guard;
   
-  coot_runtime_t::adapt_uword N(n_elem);
+  coot_rt_t::adapt_uword N(n_elem);
   
   cl_int status = 0;
   
@@ -158,7 +158,7 @@ arrayops::inplace_op_array(cl_mem dest, cl_mem src, const uword n_elem, cl_kerne
   
   coot_extra_debug_print("clEnqueueNDRangeKernel()");
   
-  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, 1, NULL, global_work_size, NULL, 0, NULL, NULL);
+  status |= clEnqueueNDRangeKernel(coot_rt.get_cq(), kernel, 1, NULL, global_work_size, NULL, 0, NULL, NULL);
   
   coot_check_runtime_error( (status != 0), "arrayops::inplace_op_array(): couldn't execute kernel" );
   }
@@ -172,7 +172,7 @@ arrayops::inplace_plus_array(cl_mem dest, cl_mem src, const uword n_elem)
   {
   coot_extra_debug_sigprint();
   
-  cl_kernel kernel = coot_runtime.get_kernel<eT>(kernel_id::inplace_plus_array);
+  cl_kernel kernel = coot_rt.get_kernel<eT>(kernel_id::inplace_plus_array);
   
   arrayops::inplace_op_array<eT>(dest, src, n_elem, kernel);
   }
@@ -186,7 +186,7 @@ arrayops::inplace_minus_array(cl_mem dest, cl_mem src, const uword n_elem)
   {
   coot_extra_debug_sigprint();
   
-  cl_kernel kernel = coot_runtime.get_kernel<eT>(kernel_id::inplace_minus_array);
+  cl_kernel kernel = coot_rt.get_kernel<eT>(kernel_id::inplace_minus_array);
   
   arrayops::inplace_op_array<eT>(dest, src, n_elem, kernel);
   }
@@ -200,7 +200,7 @@ arrayops::inplace_mul_array(cl_mem dest, cl_mem src, const uword n_elem)
   {
   coot_extra_debug_sigprint();
   
-  cl_kernel kernel = coot_runtime.get_kernel<eT>(kernel_id::inplace_mul_array);
+  cl_kernel kernel = coot_rt.get_kernel<eT>(kernel_id::inplace_mul_array);
   
   arrayops::inplace_op_array<eT>(dest, src, n_elem, kernel);
   }
@@ -214,7 +214,7 @@ arrayops::inplace_div_array(cl_mem dest, cl_mem src, const uword n_elem)
   {
   coot_extra_debug_sigprint();
   
-  cl_kernel kernel = coot_runtime.get_kernel<eT>(kernel_id::inplace_div_array);
+  cl_kernel kernel = coot_rt.get_kernel<eT>(kernel_id::inplace_div_array);
   
   arrayops::inplace_op_array<eT>(dest, src, n_elem, kernel);
   }

@@ -27,7 +27,7 @@ accu(const Base<typename T1::elem_type, T1>& X)
   
   typedef typename T1::elem_type eT;
   
-  coot_debug_check( (coot_runtime.is_valid() == false), "coot_runtime not valid" );
+  coot_debug_check( (coot_rt.is_valid() == false), "coot_rt not valid" );
   
   const unwrap<T1>   U(X.get_ref());
   const Mat<eT>& A = U.M;
@@ -37,7 +37,7 @@ accu(const Base<typename T1::elem_type, T1>& X)
   // work out number of chunks
   // make sure there are at least 4 elements per compunit
   
-  uword n_chunks = coot_runtime.get_n_units();
+  uword n_chunks = coot_rt.get_n_units();
   
   while(n_chunks >= 1)
     {
@@ -52,17 +52,17 @@ accu(const Base<typename T1::elem_type, T1>& X)
   
   Mat<eT> tmp(n_chunks, 1);
   
-  coot_runtime_t::cq_guard guard;
+  coot_rt_t::cq_guard guard;
   
   cl_int status = 0;
   
-  cl_kernel k1 = coot_runtime.get_kernel<eT>(kernel_id::accu_chunked);
+  cl_kernel k1 = coot_rt.get_kernel<eT>(kernel_id::accu_chunked);
   
   cl_mem tmp_mem = tmp.get_dev_mem(false);
   cl_mem   A_mem =   A.get_dev_mem(false);
   
-  coot_runtime_t::adapt_uword dev_chunk_size(chunk_size);
-  coot_runtime_t::adapt_uword dev_n_chunks  (n_chunks  );
+  coot_rt_t::adapt_uword dev_chunk_size(chunk_size);
+  coot_rt_t::adapt_uword dev_n_chunks  (n_chunks  );
   
   status = clSetKernelArg(k1, 0, sizeof(cl_mem),      &tmp_mem           );
   status = clSetKernelArg(k1, 1, sizeof(cl_mem),      &  A_mem           );
@@ -73,19 +73,19 @@ accu(const Base<typename T1::elem_type, T1>& X)
   const size_t k1_work_offset[1] = { 0        };
   const size_t k1_work_size[1]   = { n_chunks };
   
-  status = clEnqueueNDRangeKernel(coot_runtime.get_cq(), k1, k1_work_dim, k1_work_offset, k1_work_size, NULL, 0, NULL, NULL);
+  status = clEnqueueNDRangeKernel(coot_rt.get_cq(), k1, k1_work_dim, k1_work_offset, k1_work_size, NULL, 0, NULL, NULL);
   
   coot_check_cl_error(status, "accu()");
   
   // process any leftovers and combine with chunk sums
   
-  clFlush(coot_runtime.get_cq());
+  clFlush(coot_rt.get_cq());
   
-  cl_kernel k2 = coot_runtime.get_kernel<eT>(kernel_id::accu_twostage);
+  cl_kernel k2 = coot_rt.get_kernel<eT>(kernel_id::accu_twostage);
   
-  coot_runtime_t::adapt_uword dev_out_len(tmp.n_elem);
-  coot_runtime_t::adapt_uword dev_A_start(n_chunks*chunk_size);
-  coot_runtime_t::adapt_uword dev_A_len  (A.n_elem);
+  coot_rt_t::adapt_uword dev_out_len(tmp.n_elem);
+  coot_rt_t::adapt_uword dev_A_start(n_chunks*chunk_size);
+  coot_rt_t::adapt_uword dev_A_len  (A.n_elem);
   
   status = clSetKernelArg(k2, 0, sizeof(cl_mem),   &tmp_mem        );
   status = clSetKernelArg(k2, 1, dev_out_len.size, dev_out_len.addr);
@@ -97,7 +97,7 @@ accu(const Base<typename T1::elem_type, T1>& X)
   const size_t k2_work_offset[1] = { 0 };
   const size_t k2_work_size[1]   = { 1 };
   
-  status = clEnqueueNDRangeKernel(coot_runtime.get_cq(), k2, k2_work_dim, k2_work_offset, k2_work_size, NULL, 0, NULL, NULL);
+  status = clEnqueueNDRangeKernel(coot_rt.get_cq(), k2, k2_work_dim, k2_work_offset, k2_work_size, NULL, 0, NULL, NULL);
   
   coot_check_cl_error(status, "accu()");
   
@@ -116,7 +116,7 @@ accu_simple(const Base<typename T1::elem_type, T1>& X)
   
   typedef typename T1::elem_type eT;
   
-  coot_debug_check( (coot_runtime.is_valid() == false), "coot_runtime not valid" );
+  coot_debug_check( (coot_rt.is_valid() == false), "coot_rt not valid" );
   
   const unwrap<T1>   U(X.get_ref());
   const Mat<eT>& A = U.M;
@@ -125,16 +125,16 @@ accu_simple(const Base<typename T1::elem_type, T1>& X)
   
   Mat<eT> tmp(1, 1);
   
-  coot_runtime_t::cq_guard guard;
+  coot_rt_t::cq_guard guard;
   
   cl_int status = 0;
   
-  cl_kernel k1 = coot_runtime.get_kernel<eT>(kernel_id::accu_simple);
+  cl_kernel k1 = coot_rt.get_kernel<eT>(kernel_id::accu_simple);
   
   cl_mem tmp_mem = tmp.get_dev_mem(false);
   cl_mem   A_mem =   A.get_dev_mem(false);
   
-  coot_runtime_t::adapt_uword dev_A_len(A.n_elem);
+  coot_rt_t::adapt_uword dev_A_len(A.n_elem);
   
   status = clSetKernelArg(k1, 0, sizeof(cl_mem), &tmp_mem      );
   status = clSetKernelArg(k1, 1, sizeof(cl_mem), &  A_mem      );
@@ -144,7 +144,7 @@ accu_simple(const Base<typename T1::elem_type, T1>& X)
   const size_t k1_work_offset[1] = { 0 };
   const size_t k1_work_size[1]   = { 1 };
   
-  status = clEnqueueNDRangeKernel(coot_runtime.get_cq(), k1, k1_work_dim, k1_work_offset, k1_work_size, NULL, 0, NULL, NULL);
+  status = clEnqueueNDRangeKernel(coot_rt.get_cq(), k1, k1_work_dim, k1_work_offset, k1_work_size, NULL, 0, NULL, NULL);
   
   coot_check_cl_error(status, "accu()");
   
@@ -163,28 +163,28 @@ accu(const subview<eT>& S)
   
   // TODO: implement specialised handling for two cases: (i) n_cols = 1, (ii) n_rows = 1
   
-  coot_debug_check( (coot_runtime.is_valid() == false), "coot_runtime not valid" );
+  coot_debug_check( (coot_rt.is_valid() == false), "coot_rt not valid" );
   
   if(S.n_elem == 0)  { return eT(0); }
   
   Mat<eT> tmp(1, S.n_cols);
   
-  coot_runtime_t::cq_guard guard;
+  coot_rt_t::cq_guard guard;
   
-  cl_kernel k1 = coot_runtime.get_kernel<eT>(kernel_id::submat_sum_colwise);
+  cl_kernel k1 = coot_rt.get_kernel<eT>(kernel_id::submat_sum_colwise);
   
   cl_int status = 0;
   
   cl_mem tmp_mem = tmp.get_dev_mem(false);
   cl_mem S_m_mem = S.m.get_dev_mem(false);
   
-  coot_runtime_t::adapt_uword S_m_n_rows(S.m.n_rows);
+  coot_rt_t::adapt_uword S_m_n_rows(S.m.n_rows);
   
-  coot_runtime_t::adapt_uword start_row(S.aux_row1);
-  coot_runtime_t::adapt_uword start_col(S.aux_col1);
+  coot_rt_t::adapt_uword start_row(S.aux_row1);
+  coot_rt_t::adapt_uword start_col(S.aux_col1);
   
-  coot_runtime_t::adapt_uword S_n_rows(S.n_rows);
-  coot_runtime_t::adapt_uword S_n_cols(S.n_cols);
+  coot_rt_t::adapt_uword S_n_rows(S.n_rows);
+  coot_rt_t::adapt_uword S_n_cols(S.n_cols);
   
   status |= clSetKernelArg(k1, 0,  sizeof(cl_mem), &tmp_mem       );
   status |= clSetKernelArg(k1, 1,  sizeof(cl_mem), &S_m_mem       );
@@ -198,14 +198,14 @@ accu(const subview<eT>& S)
   const size_t k1_work_offset[1] = { 0                };
   const size_t k1_work_size[1]   = { size_t(S.n_cols) };
   
-  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), k1, k1_work_dim, k1_work_offset, k1_work_size, NULL, 0, NULL, NULL);
+  status |= clEnqueueNDRangeKernel(coot_rt.get_cq(), k1, k1_work_dim, k1_work_offset, k1_work_size, NULL, 0, NULL, NULL);
   
   coot_check_cl_error(status, "accu()");
   
   
   // combine the column sums
   
-  cl_kernel k2 = coot_runtime.get_kernel<eT>(kernel_id::accu_simple);
+  cl_kernel k2 = coot_rt.get_kernel<eT>(kernel_id::accu_simple);
   
   status |= clSetKernelArg(k2, 0, sizeof(cl_mem), &tmp_mem     );
   status |= clSetKernelArg(k2, 1, sizeof(cl_mem), &tmp_mem     );
@@ -215,7 +215,7 @@ accu(const subview<eT>& S)
   const size_t k2_work_offset[1] = { 0 };
   const size_t k2_work_size[1]   = { 1 };
   
-  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), k2, k2_work_dim, k2_work_offset, k2_work_size, NULL, 0, NULL, NULL);
+  status |= clEnqueueNDRangeKernel(coot_rt.get_cq(), k2, k2_work_dim, k2_work_offset, k2_work_size, NULL, 0, NULL, NULL);
   
   coot_check_cl_error(status, "accu()");
   

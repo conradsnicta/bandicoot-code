@@ -36,15 +36,15 @@ trace(const Base<typename T1::elem_type, T1>& X)
   
   Mat<eT> tmp(1,1);
   
-  coot_runtime_t::cq_guard guard;
+  coot_rt_t::cq_guard guard;
   
-  cl_kernel kernel = coot_runtime.get_kernel<eT>(kernel_id::trace);
+  cl_kernel kernel = coot_rt.get_kernel<eT>(kernel_id::trace);
   
   cl_mem tmp_mem = tmp.get_dev_mem(false);
   cl_mem   A_mem =   A.get_dev_mem(false);
   
-  coot_runtime_t::adapt_uword n_rows(A.n_rows);
-  coot_runtime_t::adapt_uword      N(diag_len);
+  coot_rt_t::adapt_uword n_rows(A.n_rows);
+  coot_rt_t::adapt_uword      N(diag_len);
   
   cl_int status = 0;
   
@@ -56,7 +56,7 @@ trace(const Base<typename T1::elem_type, T1>& X)
   const size_t global_work_size[1] = { size_t(1) };
   
   coot_extra_debug_print("clEnqueueNDRangeKernel()");
-  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, 1, NULL, global_work_size, NULL, 0, NULL, NULL);
+  status |= clEnqueueNDRangeKernel(coot_rt.get_cq(), kernel, 1, NULL, global_work_size, NULL, 0, NULL, NULL);
   
   coot_check_runtime_error( (status != 0), "trace(): couldn't execute kernel" );
   

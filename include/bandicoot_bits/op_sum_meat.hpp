@@ -83,7 +83,7 @@ op_sum::apply_noalias(Mat<eT>& out, const Mat<eT>& A, const uword dim)
   {
   coot_extra_debug_sigprint();
   
-  coot_debug_check( (coot_runtime.is_valid() == false), "coot_runtime not valid" );
+  coot_debug_check( (coot_rt.is_valid() == false), "coot_rt not valid" );
   
   if(dim == 0)
     {
@@ -102,19 +102,19 @@ op_sum::apply_noalias(Mat<eT>& out, const Mat<eT>& A, const uword dim)
     }
   
   
-  coot_runtime_t::cq_guard guard;
+  coot_rt_t::cq_guard guard;
   
   if(dim == 0)
     {
-    cl_kernel k1 = coot_runtime.get_kernel<eT>(kernel_id::sum_colwise);
+    cl_kernel k1 = coot_rt.get_kernel<eT>(kernel_id::sum_colwise);
     
     cl_int status = 0;
     
     cl_mem out_mem = out.get_dev_mem(false);
     cl_mem   A_mem =   A.get_dev_mem(false);
     
-    coot_runtime_t::adapt_uword A_n_rows(A.n_rows);
-    coot_runtime_t::adapt_uword A_n_cols(A.n_cols);
+    coot_rt_t::adapt_uword A_n_rows(A.n_rows);
+    coot_rt_t::adapt_uword A_n_cols(A.n_cols);
     
     status |= clSetKernelArg(k1, 0, sizeof(cl_mem), &out_mem     );
     status |= clSetKernelArg(k1, 1, sizeof(cl_mem), &A_mem       );
@@ -125,22 +125,22 @@ op_sum::apply_noalias(Mat<eT>& out, const Mat<eT>& A, const uword dim)
     const size_t k1_work_offset[1] = { 0                };
     const size_t k1_work_size[1]   = { size_t(A.n_cols) };
     
-    status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), k1, k1_work_dim, k1_work_offset, k1_work_size, NULL, 0, NULL, NULL);
+    status |= clEnqueueNDRangeKernel(coot_rt.get_cq(), k1, k1_work_dim, k1_work_offset, k1_work_size, NULL, 0, NULL, NULL);
     
     coot_check_cl_error(status, "sum()");
     }
   else
   if(dim == 1)
     {
-    cl_kernel k1 = coot_runtime.get_kernel<eT>(kernel_id::sum_rowwise);
+    cl_kernel k1 = coot_rt.get_kernel<eT>(kernel_id::sum_rowwise);
     
     cl_int status = 0;
     
     cl_mem out_mem = out.get_dev_mem(false);
     cl_mem   A_mem =   A.get_dev_mem(false);
     
-    coot_runtime_t::adapt_uword A_n_rows(A.n_rows);
-    coot_runtime_t::adapt_uword A_n_cols(A.n_cols);
+    coot_rt_t::adapt_uword A_n_rows(A.n_rows);
+    coot_rt_t::adapt_uword A_n_cols(A.n_cols);
     
     status |= clSetKernelArg(k1, 0, sizeof(cl_mem), &out_mem     );
     status |= clSetKernelArg(k1, 1, sizeof(cl_mem), &A_mem       );
@@ -151,7 +151,7 @@ op_sum::apply_noalias(Mat<eT>& out, const Mat<eT>& A, const uword dim)
     const size_t k1_work_offset[1] = { 0                };
     const size_t k1_work_size[1]   = { size_t(A.n_rows) };
     
-    status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), k1, k1_work_dim, k1_work_offset, k1_work_size, NULL, 0, NULL, NULL);
+    status |= clEnqueueNDRangeKernel(coot_rt.get_cq(), k1, k1_work_dim, k1_work_offset, k1_work_size, NULL, 0, NULL, NULL);
     
     coot_check_cl_error(status, "sum()");
     }
@@ -166,7 +166,7 @@ op_sum::apply_noalias(Mat<eT>& out, const subview<eT>& sv, const uword dim)
   {
   coot_extra_debug_sigprint();
   
-  coot_debug_check( (coot_runtime.is_valid() == false), "coot_runtime not valid" );
+  coot_debug_check( (coot_rt.is_valid() == false), "coot_rt not valid" );
   
   if(dim == 0)
     {
@@ -185,24 +185,24 @@ op_sum::apply_noalias(Mat<eT>& out, const subview<eT>& sv, const uword dim)
     }
   
   
-  coot_runtime_t::cq_guard guard;
+  coot_rt_t::cq_guard guard;
   
   if(dim == 0)
     {
-    cl_kernel k1 = coot_runtime.get_kernel<eT>(kernel_id::submat_sum_colwise);
+    cl_kernel k1 = coot_rt.get_kernel<eT>(kernel_id::submat_sum_colwise);
     
     cl_int status = 0;
     
     cl_mem  out_mem =  out.get_dev_mem(false);
     cl_mem sv_m_mem = sv.m.get_dev_mem(false);
     
-    coot_runtime_t::adapt_uword sv_m_n_rows(sv.m.n_rows);
+    coot_rt_t::adapt_uword sv_m_n_rows(sv.m.n_rows);
     
-    coot_runtime_t::adapt_uword start_row(sv.aux_row1);
-    coot_runtime_t::adapt_uword start_col(sv.aux_col1);
+    coot_rt_t::adapt_uword start_row(sv.aux_row1);
+    coot_rt_t::adapt_uword start_col(sv.aux_col1);
     
-    coot_runtime_t::adapt_uword sub_n_rows(sv.n_rows);
-    coot_runtime_t::adapt_uword sub_n_cols(sv.n_cols);
+    coot_rt_t::adapt_uword sub_n_rows(sv.n_rows);
+    coot_rt_t::adapt_uword sub_n_cols(sv.n_cols);
     
     status |= clSetKernelArg(k1, 0,   sizeof(cl_mem), &out_mem        );
     status |= clSetKernelArg(k1, 1,   sizeof(cl_mem), &sv_m_mem       );
@@ -216,27 +216,27 @@ op_sum::apply_noalias(Mat<eT>& out, const subview<eT>& sv, const uword dim)
     const size_t k1_work_offset[1] = { 0                 };
     const size_t k1_work_size[1]   = { size_t(sv.n_cols) };
     
-    status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), k1, k1_work_dim, k1_work_offset, k1_work_size, NULL, 0, NULL, NULL);
+    status |= clEnqueueNDRangeKernel(coot_rt.get_cq(), k1, k1_work_dim, k1_work_offset, k1_work_size, NULL, 0, NULL, NULL);
     
     coot_check_cl_error(status, "sum()");
     }
   else
   if(dim == 1)
     {
-    cl_kernel k1 = coot_runtime.get_kernel<eT>(kernel_id::submat_sum_rowwise);
+    cl_kernel k1 = coot_rt.get_kernel<eT>(kernel_id::submat_sum_rowwise);
     
     cl_int status = 0;
     
     cl_mem  out_mem =  out.get_dev_mem(false);
     cl_mem sv_m_mem = sv.m.get_dev_mem(false);
     
-    coot_runtime_t::adapt_uword sv_m_n_rows(sv.m.n_rows);
+    coot_rt_t::adapt_uword sv_m_n_rows(sv.m.n_rows);
     
-    coot_runtime_t::adapt_uword start_row(sv.aux_row1);
-    coot_runtime_t::adapt_uword start_col(sv.aux_col1);
+    coot_rt_t::adapt_uword start_row(sv.aux_row1);
+    coot_rt_t::adapt_uword start_col(sv.aux_col1);
     
-    coot_runtime_t::adapt_uword sub_n_rows(sv.n_rows);
-    coot_runtime_t::adapt_uword sub_n_cols(sv.n_cols);
+    coot_rt_t::adapt_uword sub_n_rows(sv.n_rows);
+    coot_rt_t::adapt_uword sub_n_cols(sv.n_cols);
     
     status |= clSetKernelArg(k1, 0,   sizeof(cl_mem), &out_mem        );
     status |= clSetKernelArg(k1, 1,   sizeof(cl_mem), &sv_m_mem       );
@@ -250,7 +250,7 @@ op_sum::apply_noalias(Mat<eT>& out, const subview<eT>& sv, const uword dim)
     const size_t k1_work_offset[1] = { 0                 };
     const size_t k1_work_size[1]   = { size_t(sv.n_rows) };
     
-    status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), k1, k1_work_dim, k1_work_offset, k1_work_size, NULL, 0, NULL, NULL);
+    status |= clEnqueueNDRangeKernel(coot_rt.get_cq(), k1, k1_work_dim, k1_work_offset, k1_work_size, NULL, 0, NULL, NULL);
     
     coot_check_cl_error(status, "sum()");
     }

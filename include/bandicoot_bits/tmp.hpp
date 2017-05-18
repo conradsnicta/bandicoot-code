@@ -44,14 +44,14 @@ Mat<eT>::get_submatrix(Mat<eT>& X, const uword start_row, const uword start_col,
   size_t dst_row_pitch   = 0;
   size_t dst_slice_pitch = 0;
   
-  cl_int status = clEnqueueCopyBufferRect(coot_runtime.get_cq(), (*this).get_dev_mem(false), X.get_dev_mem(false), src_origin, dst_origin, region, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch, 0, NULL, NULL);
+  cl_int status = clEnqueueCopyBufferRect(coot_rt.get_cq(), (*this).get_dev_mem(false), X.get_dev_mem(false), src_origin, dst_origin, region, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch, 0, NULL, NULL);
   
   if(status != CL_SUCCESS)
     {
     cout << "status: " << status << endl;
     }
   
-  clFinish(coot_runtime.get_cq());
+  clFinish(coot_rt.get_cq());
   }
 
 
@@ -91,14 +91,14 @@ Mat<eT>::set_submatrix(Mat<eT>& X, const uword start_row, const uword start_col)
   size_t dst_row_pitch   = sizeof(eT) * n_rows;          // length of each row in bytes to be used for the memory region associated with dst_buffer. If dst_row_pitch is 0, dst_row_pitch is computed as region[0].
   size_t dst_slice_pitch = sizeof(eT) * n_cols * n_rows; // length of each 2D slice in bytes to be used for the memory region associated with dst_buffer. If dst_slice_pitch is 0, dst_slice_pitch is computed as region[1] * dst_row_pitch.
   
-  cl_int status = clEnqueueCopyBufferRect(coot_runtime.get_cq(), X.get_dev_mem(false), (*this).get_dev_mem(false), src_origin, dst_origin, region, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch, 0, NULL, NULL);
+  cl_int status = clEnqueueCopyBufferRect(coot_rt.get_cq(), X.get_dev_mem(false), (*this).get_dev_mem(false), src_origin, dst_origin, region, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch, 0, NULL, NULL);
   
   if(status != CL_SUCCESS)
     {
     cout << "status: " << status << endl;
     }
   
-  clFinish(coot_runtime.get_cq());
+  clFinish(coot_rt.get_cq());
   }
 
 
@@ -116,15 +116,15 @@ Mat<eT>::get_sum_all_1(Mat<eT>& X)
   
   X.set_size(1, 1);
   
-  cl_kernel kernel = coot_runtime.get_kernel<float>(kernel_id::sum_all);
+  cl_kernel kernel = coot_rt.get_kernel<float>(kernel_id::sum_all);
   
   cl_int status = 0;
   
   cl_mem X_mem =       X.get_dev_mem(false);
   cl_mem A_mem = (*this).get_dev_mem(false);
   
-  coot_runtime_t::adapt_uword start(0);
-  coot_runtime_t::adapt_uword end  (n_elem-1);
+  coot_rt_t::adapt_uword start(0);
+  coot_rt_t::adapt_uword end  (n_elem-1);
   
   status = clSetKernelArg(kernel, 0, sizeof(cl_mem),   &X_mem);
   status = clSetKernelArg(kernel, 1, sizeof(cl_mem),   &A_mem);
@@ -138,11 +138,11 @@ Mat<eT>::get_sum_all_1(Mat<eT>& X)
   const size_t  global_work_size[1]   = { 1 };
   const size_t* local_work_size = NULL;
   
-  status = clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, work_dim, global_work_offset, global_work_size, local_work_size, 0, NULL, NULL);
+  status = clEnqueueNDRangeKernel(coot_rt.get_cq(), kernel, work_dim, global_work_offset, global_work_size, local_work_size, 0, NULL, NULL);
   
   coot_check_cl_error(status, "get_sum_all_1(): clEnqueueNDRangeKernel()");
   
-  clFinish(coot_runtime.get_cq());
+  clFinish(coot_rt.get_cq());
   }
 
 
@@ -175,7 +175,7 @@ Mat<eT>::get_sum_all_3(Mat<eT>& X)
   {
   coot_extra_debug_sigprint();
   
-  const cl_uint n_units = coot_runtime.get_n_compunits();
+  const cl_uint n_units = coot_rt.get_n_compunits();
   
   // create a fake matrix which is not so thin or thick
   
@@ -287,15 +287,15 @@ Mat<eT>::get_sum_colwise(Mat<eT>& X)
   
   X.set_size(1, (*this).n_cols);
   
-  cl_kernel kernel = coot_runtime.get_kernel<float>(kernel_id::sum_colwise);
+  cl_kernel kernel = coot_rt.get_kernel<float>(kernel_id::sum_colwise);
   
   cl_int status = 0;
   
   cl_mem X_mem =       X.get_dev_mem(false);
   cl_mem A_mem = (*this).get_dev_mem(false);
   
-  coot_runtime_t::adapt_uword local_n_rows(n_rows);
-  coot_runtime_t::adapt_uword local_n_cols(n_cols);
+  coot_rt_t::adapt_uword local_n_rows(n_rows);
+  coot_rt_t::adapt_uword local_n_cols(n_cols);
   
   status = clSetKernelArg(kernel, 0, sizeof(cl_mem),    &X_mem       );
   status = clSetKernelArg(kernel, 1, sizeof(cl_mem),    &A_mem       );
@@ -318,11 +318,11 @@ Mat<eT>::get_sum_colwise(Mat<eT>& X)
   // Max work item sizes  512x512x512
   // Max work group size  512
   
-  status = clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, work_dim, global_work_offset, global_work_size, local_work_size, 0, NULL, NULL);
+  status = clEnqueueNDRangeKernel(coot_rt.get_cq(), kernel, work_dim, global_work_offset, global_work_size, local_work_size, 0, NULL, NULL);
   
   coot_check_cl_error(status, "get_sum_colwise(): clEnqueueNDRangeKernel()");
   
-  clFinish(coot_runtime.get_cq());
+  clFinish(coot_rt.get_cq());
   }
 
 
@@ -337,15 +337,15 @@ Mat<eT>::get_sum_rowwise(Mat<eT>& X)
   
   X.set_size((*this).n_rows, 1);
   
-  cl_kernel kernel = coot_runtime.get_kernel<float>(kernel_id::sum_rowwise);
+  cl_kernel kernel = coot_rt.get_kernel<float>(kernel_id::sum_rowwise);
   
   cl_int status = 0;
   
   cl_mem X_mem =       X.get_dev_mem(false);
   cl_mem A_mem = (*this).get_dev_mem(false);
   
-  coot_runtime_t::adapt_uword local_n_rows(n_rows);
-  coot_runtime_t::adapt_uword local_n_cols(n_cols);
+  coot_rt_t::adapt_uword local_n_rows(n_rows);
+  coot_rt_t::adapt_uword local_n_cols(n_cols);
   
   status |= clSetKernelArg(kernel, 0, sizeof(cl_mem),       &X_mem       );
   status |= clSetKernelArg(kernel, 1, sizeof(cl_mem),       &A_mem       );
@@ -362,14 +362,14 @@ Mat<eT>::get_sum_rowwise(Mat<eT>& X)
   const size_t  global_work_size[1]   = { n_rows };
   const size_t* local_work_size = NULL;
   
-  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, work_dim, global_work_offset, global_work_size, local_work_size, 0, NULL, NULL);
+  status |= clEnqueueNDRangeKernel(coot_rt.get_cq(), kernel, work_dim, global_work_offset, global_work_size, local_work_size, 0, NULL, NULL);
   
   if(status != CL_SUCCESS)
     {
     cout << "status: " << status << endl;
     }
   
-  clFinish(coot_runtime.get_cq());
+  clFinish(coot_rt.get_cq());
   }
 
 
@@ -388,7 +388,7 @@ Mat<eT>::get_sum_submat_colwise(Mat<eT>& X, const uword start_row, const uword s
   X.set_size(1, sub_n_cols);
   X.fill(-1);
   
-  cl_kernel kernel = coot_runtime.get_kernel<float>(kernel_id::submat_sum_colwise);
+  cl_kernel kernel = coot_rt.get_kernel<float>(kernel_id::submat_sum_colwise);
   
   cl_int status = 0;
   
@@ -420,14 +420,14 @@ Mat<eT>::get_sum_submat_colwise(Mat<eT>& X, const uword start_row, const uword s
   const size_t  global_work_size[1]   = { sub_n_cols };  // number of columns in the submatrix
   const size_t* local_work_size = NULL;
   
-  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, work_dim, global_work_offset, global_work_size, local_work_size, 0, NULL, NULL);
+  status |= clEnqueueNDRangeKernel(coot_rt.get_cq(), kernel, work_dim, global_work_offset, global_work_size, local_work_size, 0, NULL, NULL);
   
   if(status != CL_SUCCESS)
     {
     cout << "status: " << status << endl;
     }
   
-  clFinish(coot_runtime.get_cq());
+  clFinish(coot_rt.get_cq());
   }
 
 
@@ -445,7 +445,7 @@ Mat<eT>::get_sum_submat_rowwise(Mat<eT>& X, const uword start_row, const uword s
 
   X.set_size(sub_n_rows, 1);
   
-  cl_kernel kernel = coot_runtime.get_kernel<float>(kernel_id::submat_sum_rowwise);
+  cl_kernel kernel = coot_rt.get_kernel<float>(kernel_id::submat_sum_rowwise);
   
   cl_int status = 0;
   
@@ -477,14 +477,14 @@ Mat<eT>::get_sum_submat_rowwise(Mat<eT>& X, const uword start_row, const uword s
   const size_t  global_work_size[1]   = { sub_n_rows };
   const size_t* local_work_size = NULL;
   
-  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, work_dim, global_work_offset, global_work_size, local_work_size, 0, NULL, NULL);
+  status |= clEnqueueNDRangeKernel(coot_rt.get_cq(), kernel, work_dim, global_work_offset, global_work_size, local_work_size, 0, NULL, NULL);
   
   if(status != CL_SUCCESS)
     {
     cout << "status: " << status << endl;
     }
   
-  clFinish(coot_runtime.get_cq());
+  clFinish(coot_rt.get_cq());
   }
 
 

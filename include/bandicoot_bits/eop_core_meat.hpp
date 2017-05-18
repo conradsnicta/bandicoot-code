@@ -35,21 +35,21 @@ eop_core<eop_type>::apply(Mat<typename T1::elem_type>& out, const eOp<T1, eop_ty
   const unwrap<T1>   U(x.m);
   const Mat<eT>& A = U.M;
   
-  coot_runtime_t::cq_guard guard;
+  coot_rt_t::cq_guard guard;
   
   cl_kernel kernel;
   
-       if(is_same_type<eop_type, eop_scalar_plus      >::yes)  { kernel = coot_runtime.get_kernel<eT>(kernel_id::equ_array_plus_scalar      ); }
-  else if(is_same_type<eop_type, eop_neg              >::yes)  { kernel = coot_runtime.get_kernel<eT>(kernel_id::equ_array_neg              ); }
-  else if(is_same_type<eop_type, eop_scalar_minus_pre >::yes)  { kernel = coot_runtime.get_kernel<eT>(kernel_id::equ_array_minus_scalar_pre ); }
-  else if(is_same_type<eop_type, eop_scalar_minus_post>::yes)  { kernel = coot_runtime.get_kernel<eT>(kernel_id::equ_array_minus_scalar_post); }
-  else if(is_same_type<eop_type, eop_scalar_times     >::yes)  { kernel = coot_runtime.get_kernel<eT>(kernel_id::equ_array_mul_scalar       ); }
-  else if(is_same_type<eop_type, eop_scalar_div_pre   >::yes)  { kernel = coot_runtime.get_kernel<eT>(kernel_id::equ_array_div_scalar_pre   ); }
-  else if(is_same_type<eop_type, eop_scalar_div_post  >::yes)  { kernel = coot_runtime.get_kernel<eT>(kernel_id::equ_array_div_scalar_post  ); }
-  else if(is_same_type<eop_type, eop_square           >::yes)  { kernel = coot_runtime.get_kernel<eT>(kernel_id::equ_array_square           ); }
-  else if(is_same_type<eop_type, eop_sqrt             >::yes)  { kernel = coot_runtime.get_kernel<eT>(kernel_id::equ_array_sqrt             ); }
-  else if(is_same_type<eop_type, eop_exp              >::yes)  { kernel = coot_runtime.get_kernel<eT>(kernel_id::equ_array_exp              ); }
-  else if(is_same_type<eop_type, eop_log              >::yes)  { kernel = coot_runtime.get_kernel<eT>(kernel_id::equ_array_log              ); }
+       if(is_same_type<eop_type, eop_scalar_plus      >::yes)  { kernel = coot_rt.get_kernel<eT>(kernel_id::equ_array_plus_scalar      ); }
+  else if(is_same_type<eop_type, eop_neg              >::yes)  { kernel = coot_rt.get_kernel<eT>(kernel_id::equ_array_neg              ); }
+  else if(is_same_type<eop_type, eop_scalar_minus_pre >::yes)  { kernel = coot_rt.get_kernel<eT>(kernel_id::equ_array_minus_scalar_pre ); }
+  else if(is_same_type<eop_type, eop_scalar_minus_post>::yes)  { kernel = coot_rt.get_kernel<eT>(kernel_id::equ_array_minus_scalar_post); }
+  else if(is_same_type<eop_type, eop_scalar_times     >::yes)  { kernel = coot_rt.get_kernel<eT>(kernel_id::equ_array_mul_scalar       ); }
+  else if(is_same_type<eop_type, eop_scalar_div_pre   >::yes)  { kernel = coot_rt.get_kernel<eT>(kernel_id::equ_array_div_scalar_pre   ); }
+  else if(is_same_type<eop_type, eop_scalar_div_post  >::yes)  { kernel = coot_rt.get_kernel<eT>(kernel_id::equ_array_div_scalar_post  ); }
+  else if(is_same_type<eop_type, eop_square           >::yes)  { kernel = coot_rt.get_kernel<eT>(kernel_id::equ_array_square           ); }
+  else if(is_same_type<eop_type, eop_sqrt             >::yes)  { kernel = coot_rt.get_kernel<eT>(kernel_id::equ_array_sqrt             ); }
+  else if(is_same_type<eop_type, eop_exp              >::yes)  { kernel = coot_rt.get_kernel<eT>(kernel_id::equ_array_exp              ); }
+  else if(is_same_type<eop_type, eop_log              >::yes)  { kernel = coot_rt.get_kernel<eT>(kernel_id::equ_array_log              ); }
   else { coot_debug_check(true, "fixme: unhandled eop_type"); }
   
   cl_mem out_dev_mem = out.get_dev_mem(false);
@@ -58,7 +58,7 @@ eop_core<eop_type>::apply(Mat<typename T1::elem_type>& out, const eOp<T1, eop_ty
   eT val = x.aux;
   
   uword n_elem = out.get_n_elem();
-  coot_runtime_t::adapt_uword N(n_elem);
+  coot_rt_t::adapt_uword N(n_elem);
   
   cl_int status = 0;
   
@@ -69,7 +69,7 @@ eop_core<eop_type>::apply(Mat<typename T1::elem_type>& out, const eOp<T1, eop_ty
   
   size_t work_size = size_t(n_elem);
   
-  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, 1, NULL, &work_size, NULL, 0, NULL, NULL);
+  status |= clEnqueueNDRangeKernel(coot_rt.get_cq(), kernel, 1, NULL, &work_size, NULL, 0, NULL, NULL);
   
   coot_check_runtime_error( (status != CL_SUCCESS), "eop_core: couldn't execute kernel" );
   }
