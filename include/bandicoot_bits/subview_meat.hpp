@@ -121,7 +121,7 @@ subview<eT>::inplace_op(const eT val, cl_kernel kernel)
   
   cl_int status = 0;
   
-  status |= clSetKernelArg(kernel, 0, sizeof(cl_mem),    &m.device_mem );
+  status |= clSetKernelArg(kernel, 0, sizeof(cl_mem),    &m.dev_mem );
   status |= clSetKernelArg(kernel, 1, sizeof(eT),        &val          );
   status |= clSetKernelArg(kernel, 2, m_end_row.size,    m_end_row.addr);
   status |= clSetKernelArg(kernel, 3, m_end_col.size,    m_end_col.addr);
@@ -242,8 +242,8 @@ subview<eT>::inplace_op(const Base<eT,T1>& in, cl_kernel kernel, const char* ide
   
   cl_int status = 0;
   
-  status |= clSetKernelArg(kernel, 0, sizeof(cl_mem), &m.device_mem );
-  status |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &X.device_mem );
+  status |= clSetKernelArg(kernel, 0, sizeof(cl_mem), &m.dev_mem    );
+  status |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &X.dev_mem    );
   status |= clSetKernelArg(kernel, 2, start_row.size, start_row.addr);
   status |= clSetKernelArg(kernel, 3, start_col.size, start_col.addr);
   status |= clSetKernelArg(kernel, 4,  m_n_rows.size,  m_n_rows.addr);
@@ -302,7 +302,7 @@ subview<eT>::operator= (const Base<eT,T1>& in)
     size_t dst_row_pitch   = sizeof(eT) * m.n_rows;
     size_t dst_slice_pitch = sizeof(eT) * m.n_cols * m.n_rows;
     
-    cl_int status = clEnqueueCopyBufferRect(coot_runtime.get_cq(), X.device_mem, m.device_mem, src_origin, dst_origin, region, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch, 0, NULL, NULL);
+    cl_int status = clEnqueueCopyBufferRect(coot_runtime.get_cq(), X.dev_mem, m.dev_mem, src_origin, dst_origin, region, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch, 0, NULL, NULL);
     
     coot_check_runtime_error( (status != 0), "subview::extract: couldn't copy buffer" );
     }
@@ -569,7 +569,7 @@ subview<eT>::extract(Mat<eT>& out, const subview<eT>& in)
   size_t dst_row_pitch   = 0;
   size_t dst_slice_pitch = 0;
   
-  cl_int status = clEnqueueCopyBufferRect(coot_runtime.get_cq(), in.m.device_mem, out.device_mem, src_origin, dst_origin, region, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch, 0, NULL, NULL);
+  cl_int status = clEnqueueCopyBufferRect(coot_runtime.get_cq(), in.m.dev_mem, out.dev_mem, src_origin, dst_origin, region, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch, 0, NULL, NULL);
   
   coot_check_runtime_error( (status != 0), "subview::extract: couldn't copy buffer" );
   }

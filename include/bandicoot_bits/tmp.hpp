@@ -44,7 +44,7 @@ Mat<eT>::get_submatrix(Mat<eT>& X, const uword start_row, const uword start_col,
   size_t dst_row_pitch   = 0;
   size_t dst_slice_pitch = 0;
   
-  cl_int status = clEnqueueCopyBufferRect(coot_runtime.get_cq(), (*this).get_device_mem(false), X.get_device_mem(false), src_origin, dst_origin, region, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch, 0, NULL, NULL);
+  cl_int status = clEnqueueCopyBufferRect(coot_runtime.get_cq(), (*this).get_dev_mem(false), X.get_dev_mem(false), src_origin, dst_origin, region, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch, 0, NULL, NULL);
   
   if(status != CL_SUCCESS)
     {
@@ -91,7 +91,7 @@ Mat<eT>::set_submatrix(Mat<eT>& X, const uword start_row, const uword start_col)
   size_t dst_row_pitch   = sizeof(eT) * n_rows;          // length of each row in bytes to be used for the memory region associated with dst_buffer. If dst_row_pitch is 0, dst_row_pitch is computed as region[0].
   size_t dst_slice_pitch = sizeof(eT) * n_cols * n_rows; // length of each 2D slice in bytes to be used for the memory region associated with dst_buffer. If dst_slice_pitch is 0, dst_slice_pitch is computed as region[1] * dst_row_pitch.
   
-  cl_int status = clEnqueueCopyBufferRect(coot_runtime.get_cq(), X.get_device_mem(false), (*this).get_device_mem(false), src_origin, dst_origin, region, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch, 0, NULL, NULL);
+  cl_int status = clEnqueueCopyBufferRect(coot_runtime.get_cq(), X.get_dev_mem(false), (*this).get_dev_mem(false), src_origin, dst_origin, region, src_row_pitch, src_slice_pitch, dst_row_pitch, dst_slice_pitch, 0, NULL, NULL);
   
   if(status != CL_SUCCESS)
     {
@@ -120,8 +120,8 @@ Mat<eT>::get_sum_all_1(Mat<eT>& X)
   
   cl_int status = 0;
   
-  cl_mem X_mem =       X.get_device_mem(false);
-  cl_mem A_mem = (*this).get_device_mem(false);
+  cl_mem X_mem =       X.get_dev_mem(false);
+  cl_mem A_mem = (*this).get_dev_mem(false);
   
   coot_runtime_t::adapt_uword start(0);
   coot_runtime_t::adapt_uword end  (n_elem-1);
@@ -267,7 +267,7 @@ Mat<eT>::get_sum_all_3(Mat<eT>& X)
     fake_n_cols = n_cols;
     }
   
-  Mat<eT> fake(get_device_mem(false), fake_n_rows, fake_n_cols);
+  Mat<eT> fake(get_dev_mem(false), fake_n_rows, fake_n_cols);
   
   Mat<eT> tmp;
   fake.get_sum_colwise(tmp);
@@ -291,8 +291,8 @@ Mat<eT>::get_sum_colwise(Mat<eT>& X)
   
   cl_int status = 0;
   
-  cl_mem X_mem =       X.get_device_mem(false);
-  cl_mem A_mem = (*this).get_device_mem(false);
+  cl_mem X_mem =       X.get_dev_mem(false);
+  cl_mem A_mem = (*this).get_dev_mem(false);
   
   coot_runtime_t::adapt_uword local_n_rows(n_rows);
   coot_runtime_t::adapt_uword local_n_cols(n_cols);
@@ -341,8 +341,8 @@ Mat<eT>::get_sum_rowwise(Mat<eT>& X)
   
   cl_int status = 0;
   
-  cl_mem X_mem =       X.get_device_mem(false);
-  cl_mem A_mem = (*this).get_device_mem(false);
+  cl_mem X_mem =       X.get_dev_mem(false);
+  cl_mem A_mem = (*this).get_dev_mem(false);
   
   coot_runtime_t::adapt_uword local_n_rows(n_rows);
   coot_runtime_t::adapt_uword local_n_cols(n_cols);
@@ -392,8 +392,8 @@ Mat<eT>::get_sum_submat_colwise(Mat<eT>& X, const uword start_row, const uword s
   
   cl_int status = 0;
   
-  cl_mem X_mem =       X.get_device_mem(false);
-  cl_mem A_mem = (*this).get_device_mem(false);
+  cl_mem X_mem =       X.get_dev_mem(false);
+  cl_mem A_mem = (*this).get_dev_mem(false);
   
   unsigned int local_n_rows = n_rows;
   unsigned int local_n_cols = n_cols;
@@ -449,8 +449,8 @@ Mat<eT>::get_sum_submat_rowwise(Mat<eT>& X, const uword start_row, const uword s
   
   cl_int status = 0;
   
-  cl_mem X_mem =       X.get_device_mem(false);
-  cl_mem A_mem = (*this).get_device_mem(false);
+  cl_mem X_mem =       X.get_dev_mem(false);
+  cl_mem A_mem = (*this).get_dev_mem(false);
   
   unsigned int local_n_rows = n_rows;
   unsigned int local_n_cols = n_cols;

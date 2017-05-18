@@ -58,8 +58,8 @@ accu(const Base<typename T1::elem_type, T1>& X)
   
   cl_kernel k1 = coot_runtime.get_kernel<eT>(kernel_id::accu_chunked);
   
-  cl_mem tmp_mem = tmp.get_device_mem(false);
-  cl_mem   A_mem =   A.get_device_mem(false);
+  cl_mem tmp_mem = tmp.get_dev_mem(false);
+  cl_mem   A_mem =   A.get_dev_mem(false);
   
   coot_runtime_t::adapt_uword dev_chunk_size(chunk_size);
   coot_runtime_t::adapt_uword dev_n_chunks  (n_chunks  );
@@ -131,8 +131,8 @@ accu_simple(const Base<typename T1::elem_type, T1>& X)
   
   cl_kernel k1 = coot_runtime.get_kernel<eT>(kernel_id::accu_simple);
   
-  cl_mem tmp_mem = tmp.get_device_mem(false);
-  cl_mem   A_mem =   A.get_device_mem(false);
+  cl_mem tmp_mem = tmp.get_dev_mem(false);
+  cl_mem   A_mem =   A.get_dev_mem(false);
   
   coot_runtime_t::adapt_uword dev_A_len(A.n_elem);
   
@@ -175,8 +175,8 @@ accu(const subview<eT>& S)
   
   cl_int status = 0;
   
-  cl_mem tmp_mem = tmp.get_device_mem(false);
-  cl_mem S_m_mem = S.m.get_device_mem(false);
+  cl_mem tmp_mem = tmp.get_dev_mem(false);
+  cl_mem S_m_mem = S.m.get_dev_mem(false);
   
   coot_runtime_t::adapt_uword S_m_n_rows(S.m.n_rows);
   

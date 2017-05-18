@@ -40,8 +40,8 @@ trace(const Base<typename T1::elem_type, T1>& X)
   
   cl_kernel kernel = coot_runtime.get_kernel<eT>(kernel_id::trace);
   
-  cl_mem tmp_mem = tmp.get_device_mem(false);
-  cl_mem   A_mem =   A.get_device_mem(false);
+  cl_mem tmp_mem = tmp.get_dev_mem(false);
+  cl_mem   A_mem =   A.get_dev_mem(false);
   
   coot_runtime_t::adapt_uword n_rows(A.n_rows);
   coot_runtime_t::adapt_uword      N(diag_len);

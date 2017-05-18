@@ -80,7 +80,7 @@ class coot_runtime_t
   template<typename eT>
   inline cl_mem acquire_memory(const uword n_elem);
   
-  inline void release_memory(cl_mem device_mem);
+  inline void release_memory(cl_mem dev_mem);
   
   inline cl_context       get_context();
   inline cl_command_queue get_cq();

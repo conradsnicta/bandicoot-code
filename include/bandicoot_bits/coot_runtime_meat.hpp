@@ -431,7 +431,7 @@ coot_runtime_t::interrogate_device(const bool print_details)
   
   cl_program tmp_program     = NULL;
   cl_kernel  tmp_kernel      = NULL;
-  cl_mem     tmp_device_mem  = NULL;
+  cl_mem     tmp_dev_mem     = NULL;
   cl_uint    tmp_host_mem[4] = { 0, 0, 0, 0 };
   
   cl_int status = 0;
@@ -450,17 +450,17 @@ coot_runtime_t::interrogate_device(const bool print_details)
       if(status == CL_SUCCESS)
         {
         status = 0;
-        tmp_device_mem = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_uint)*4, NULL, &status);
+        tmp_dev_mem = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_uint)*4, NULL, &status);
         
         status = 0;
-        clSetKernelArg(tmp_kernel, 0, sizeof(cl_mem),  &tmp_device_mem);
+        clSetKernelArg(tmp_kernel, 0, sizeof(cl_mem),  &tmp_dev_mem);
         status = clEnqueueTask(cq, tmp_kernel, 0, NULL, NULL);  // TODO: replace with clEnqueueNDRangeKernel to avoid deprecation warnings
         
         if(status == CL_SUCCESS)
           {
           clFinish(cq);
           
-          status = clEnqueueReadBuffer(cq, tmp_device_mem, CL_TRUE, 0, sizeof(cl_uint)*4, tmp_host_mem, 0, NULL, NULL);
+          status = clEnqueueReadBuffer(cq, tmp_dev_mem, CL_TRUE, 0, sizeof(cl_uint)*4, tmp_host_mem, 0, NULL, NULL);
           
           if(status == CL_SUCCESS)
             {
@@ -496,9 +496,9 @@ coot_runtime_t::interrogate_device(const bool print_details)
   
   if(found_width == false)  { coot_warn("coot_runtime: size_t has unsupported width; using 32 bit word"); }
   
-  if(tmp_device_mem != NULL)  { clReleaseMemObject(tmp_device_mem); }
-  if(tmp_kernel     != NULL)  { clReleaseKernel(tmp_kernel);        }
-  if(tmp_program    != NULL)  { clReleaseProgram(tmp_program);      }
+  if(tmp_dev_mem != NULL)  { clReleaseMemObject(tmp_dev_mem); }
+  if(tmp_kernel  != NULL)  { clReleaseKernel(tmp_kernel);        }
+  if(tmp_program != NULL)  { clReleaseProgram(tmp_program);      }
   
   return found_width;
   }
@@ -724,24 +724,24 @@ coot_runtime_t::acquire_memory(const uword n_elem)
    );
   
   cl_int status = 0;
-  cl_mem device_mem = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(eT)*(std::max)(uword(1), n_elem), NULL, &status);
+  cl_mem dev_mem = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(eT)*(std::max)(uword(1), n_elem), NULL, &status);
   
-  coot_check_bad_alloc( ((status != CL_SUCCESS) || (device_mem == NULL)), "coot_runtime::acquire_memory(): not enough memory on device" );
+  coot_check_bad_alloc( ((status != CL_SUCCESS) || (dev_mem == NULL)), "coot_runtime::acquire_memory(): not enough memory on device" );
   
-  return device_mem;
+  return dev_mem;
   }
 
 
 
 inline
 void
-coot_runtime_t::release_memory(cl_mem device_mem)
+coot_runtime_t::release_memory(cl_mem dev_mem)
   {
   coot_extra_debug_sigprint();
   
   coot_debug_check( (valid == false), "coot_runtime not valid" );
   
-  if(device_mem)  { clReleaseMemObject(device_mem); }
+  if(dev_mem)  { clReleaseMemObject(dev_mem); }
   }
 
 

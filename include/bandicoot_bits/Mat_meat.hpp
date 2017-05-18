@@ -40,7 +40,7 @@ Mat<eT>::Mat()
   , n_elem    (0)
   , vec_state (0)
   , mem_state (0)
-  , device_mem(NULL)
+  , dev_mem(NULL)
   {
   coot_extra_debug_sigprint_this(this);
   }
@@ -56,7 +56,7 @@ Mat<eT>::Mat(const uword in_n_rows, const uword in_n_cols)
   , n_elem    (0)
   , vec_state (0)
   , mem_state (0)
-  , device_mem(NULL)
+  , dev_mem(NULL)
   {
   coot_extra_debug_sigprint_this(this);
   
@@ -67,13 +67,13 @@ Mat<eT>::Mat(const uword in_n_rows, const uword in_n_cols)
 
 template<typename eT>
 inline
-Mat<eT>::Mat(cl_mem aux_device_mem, const uword in_n_rows, const uword in_n_cols)
+Mat<eT>::Mat(cl_mem aux_dev_mem, const uword in_n_rows, const uword in_n_cols)
   : n_rows    (in_n_rows)
   , n_cols    (in_n_cols)
   , n_elem    (in_n_rows*in_n_cols)  // TODO: need to check whether the result fits
   , vec_state (0)
   , mem_state (1)
-  , device_mem(aux_device_mem)
+  , dev_mem(aux_dev_mem)
   {
   coot_extra_debug_sigprint_this(this);
   }
@@ -83,13 +83,13 @@ Mat<eT>::Mat(cl_mem aux_device_mem, const uword in_n_rows, const uword in_n_cols
 template<typename eT>
 inline
 cl_mem
-Mat<eT>::get_device_mem(const bool sync) const
+Mat<eT>::get_dev_mem(const bool sync) const
   {
   coot_extra_debug_sigprint();
   
   if(sync)  { clFinish(coot_runtime.get_cq()); } // force synchronisation
   
-  return device_mem;
+  return dev_mem;
   }
 
 
@@ -97,7 +97,7 @@ Mat<eT>::get_device_mem(const bool sync) const
 template<typename eT>
 inline
 void
-Mat<eT>::copy_from_device_mem(eT* dest_cpu_memptr, const uword N) const
+Mat<eT>::copy_from_dev_mem(eT* dest_cpu_memptr, const uword N) const
   {
   coot_extra_debug_sigprint();
   
@@ -108,9 +108,9 @@ Mat<eT>::copy_from_device_mem(eT* dest_cpu_memptr, const uword N) const
   const uword n_elem_mod = (std::min)(n_elem, N);
   
   // use a blocking call
-  const cl_int status = clEnqueueReadBuffer(coot_runtime.get_cq(), device_mem, CL_TRUE, 0, sizeof(eT)*n_elem_mod, dest_cpu_memptr, 0, NULL, NULL);
+  const cl_int status = clEnqueueReadBuffer(coot_runtime.get_cq(), dev_mem, CL_TRUE, 0, sizeof(eT)*n_elem_mod, dest_cpu_memptr, 0, NULL, NULL);
   
-  coot_check_runtime_error( (status != CL_SUCCESS), "Mat::copy_from_device_mem(): couldn't access device memory" );
+  coot_check_runtime_error( (status != CL_SUCCESS), "Mat::copy_from_dev_mem(): couldn't access device memory" );
   }
 
 
@@ -118,7 +118,7 @@ Mat<eT>::copy_from_device_mem(eT* dest_cpu_memptr, const uword N) const
 template<typename eT>
 inline
 void
-Mat<eT>::copy_to_device_mem(const eT* src_cpu_memptr, const uword N)
+Mat<eT>::copy_into_dev_mem(const eT* src_cpu_memptr, const uword N)
   {
   coot_extra_debug_sigprint();
   
@@ -129,9 +129,9 @@ Mat<eT>::copy_to_device_mem(const eT* src_cpu_memptr, const uword N)
   const uword n_elem_mod = (std::min)(n_elem, N);
   
   // use a blocking call
-  cl_int status = clEnqueueWriteBuffer(coot_runtime.get_cq(), device_mem, CL_TRUE, 0, sizeof(eT)*n_elem_mod, src_cpu_memptr, 0, NULL, NULL);
+  cl_int status = clEnqueueWriteBuffer(coot_runtime.get_cq(), dev_mem, CL_TRUE, 0, sizeof(eT)*n_elem_mod, src_cpu_memptr, 0, NULL, NULL);
   
-  coot_check_runtime_error( (status != CL_SUCCESS), "Mat::write_device_mem(): couldn't access device memory" );
+  coot_check_runtime_error( (status != CL_SUCCESS), "Mat::write_dev_mem(): couldn't access device memory" );
   }
 
 
@@ -143,12 +143,12 @@ Mat<eT>::cleanup()
   {
   coot_extra_debug_sigprint();
   
-  if((device_mem != NULL) && (mem_state == 0) && (n_elem > 0))
+  if((dev_mem != NULL) && (mem_state == 0) && (n_elem > 0))
     {
-    coot_runtime.release_memory(device_mem);
+    coot_runtime.release_memory(dev_mem);
     }
   
-  device_mem = NULL;  // for paranoia
+  dev_mem = NULL;  // for paranoia
   }
 
 
@@ -197,7 +197,7 @@ Mat<eT>::init(const uword new_n_rows, const uword new_n_cols)
         }
       
       coot_extra_debug_print("Mat::init(): acquiring memory");
-      device_mem = coot_runtime.acquire_memory<eT>(new_n_elem);
+      dev_mem = coot_runtime.acquire_memory<eT>(new_n_elem);
       }
     
     access::rw(n_rows) = new_n_rows;
@@ -217,7 +217,7 @@ Mat<eT>::operator=(const eT val)
   
   set_size(1,1);
   
-  arrayops::inplace_set_scalar(device_mem, val, n_elem);
+  arrayops::inplace_set_scalar(dev_mem, val, n_elem);
   
   return *this;
   }
@@ -231,7 +231,7 @@ Mat<eT>::operator+=(const eT val)
   {
   coot_extra_debug_sigprint();
   
-  arrayops::inplace_plus_scalar(device_mem, val, n_elem);
+  arrayops::inplace_plus_scalar(dev_mem, val, n_elem);
   
   return *this;
   }
@@ -245,7 +245,7 @@ Mat<eT>::operator-=(const eT val)
   {
   coot_extra_debug_sigprint();
   
-  arrayops::inplace_minus_scalar(device_mem, val, n_elem);
+  arrayops::inplace_minus_scalar(dev_mem, val, n_elem);
   
   return *this;
   }
@@ -259,7 +259,7 @@ Mat<eT>::operator*=(const eT val)
   {
   coot_extra_debug_sigprint();
   
-  arrayops::inplace_mul_scalar(device_mem, val, n_elem);
+  arrayops::inplace_mul_scalar(dev_mem, val, n_elem);
   
   return *this;
   }
@@ -273,7 +273,7 @@ Mat<eT>::operator/=(const eT val)
   {
   coot_extra_debug_sigprint();
   
-  arrayops::inplace_div_scalar(device_mem, val, n_elem);
+  arrayops::inplace_div_scalar(dev_mem, val, n_elem);
   
   return *this;
   }
@@ -307,7 +307,7 @@ Mat<eT>::operator=(const Mat<eT>& X)
     {
     (*this).set_size(X.n_rows, X.n_cols);
     
-    arrayops::copy<eT>(device_mem, X.device_mem, n_elem);
+    arrayops::copy<eT>(dev_mem, X.dev_mem, n_elem);
     }
   
   return *this;
@@ -324,7 +324,7 @@ Mat<eT>::operator+=(const Mat<eT>& X)
   
   coot_assert_same_size((*this), X, "Mat::operator+=" );
   
-  arrayops::inplace_plus_array<eT>(device_mem, X.device_mem, n_elem);
+  arrayops::inplace_plus_array<eT>(dev_mem, X.dev_mem, n_elem);
   
   return *this;
   }
@@ -340,7 +340,7 @@ Mat<eT>::operator-=(const Mat<eT>& X)
   
   coot_assert_same_size((*this), X, "Mat::operator-=" );
   
-  arrayops::inplace_minus_array<eT>(device_mem, X.device_mem, n_elem);
+  arrayops::inplace_minus_array<eT>(dev_mem, X.dev_mem, n_elem);
   
   return *this;
   }
@@ -370,7 +370,7 @@ Mat<eT>::operator%=(const Mat<eT>& X)
   
   coot_assert_same_size((*this), X, "Mat::operator%=" );
   
-  arrayops::inplace_mul_array<eT>(device_mem, X.device_mem, n_elem);
+  arrayops::inplace_mul_array<eT>(dev_mem, X.dev_mem, n_elem);
   
   return *this;
   }
@@ -386,7 +386,7 @@ Mat<eT>::operator/=(const Mat<eT>& X)
   
   coot_assert_same_size((*this), X, "Mat::operator/=" );
   
-  arrayops::inplace_div_array<eT>(device_mem, X.device_mem, n_elem);
+  arrayops::inplace_div_array<eT>(dev_mem, X.dev_mem, n_elem);
   
   return *this;
   }
@@ -441,14 +441,14 @@ Mat<eT>::steal_mem(Mat<eT>& X)
     access::rw(n_elem)     = X.n_elem;
     access::rw(vec_state)  = X.vec_state;
     access::rw(mem_state)  = X.mem_state;
-    access::rw(device_mem) = X.device_mem;
+    access::rw(dev_mem) = X.dev_mem;
     
     access::rw(X.n_rows)     = 0;
     access::rw(X.n_cols)     = 0;
     access::rw(X.n_elem)     = 0;
     access::rw(X.vec_state)  = 0;
     access::rw(X.mem_state)  = 0;
-    access::rw(X.device_mem) = NULL;
+    access::rw(X.dev_mem) = NULL;
     }
   }
 
@@ -962,7 +962,7 @@ Mat<eT>::fill(const eT val)
   {
   coot_extra_debug_sigprint();
   
-  arrayops::inplace_set_scalar(device_mem, val, n_elem);
+  arrayops::inplace_set_scalar(dev_mem, val, n_elem);
   
   return *this;
   }
@@ -1073,7 +1073,7 @@ Mat<eT>::eye()
   
   cl_int status = 0;
   
-  status |= clSetKernelArg(kernel, 0, sizeof(cl_mem),    &device_mem      );
+  status |= clSetKernelArg(kernel, 0, sizeof(cl_mem),    &dev_mem      );
   status |= clSetKernelArg(kernel, 1, local_n_rows.size, local_n_rows.addr);
   status |= clSetKernelArg(kernel, 2, local_n_cols.size, local_n_cols.addr);
   
@@ -1172,7 +1172,7 @@ Mat<eT>::impl_print(const std::string extra_text) const
     {
     arma::Mat<eT> tmp(n_rows,n_cols);
     
-    (*this).copy_from_device_mem( tmp.memptr(), n_elem);
+    (*this).copy_from_dev_mem( tmp.memptr(), n_elem);
     
     tmp.print(extra_text);
     }

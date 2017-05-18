@@ -110,8 +110,8 @@ op_sum::apply_noalias(Mat<eT>& out, const Mat<eT>& A, const uword dim)
     
     cl_int status = 0;
     
-    cl_mem out_mem = out.get_device_mem(false);
-    cl_mem   A_mem =   A.get_device_mem(false);
+    cl_mem out_mem = out.get_dev_mem(false);
+    cl_mem   A_mem =   A.get_dev_mem(false);
     
     coot_runtime_t::adapt_uword A_n_rows(A.n_rows);
     coot_runtime_t::adapt_uword A_n_cols(A.n_cols);
@@ -136,8 +136,8 @@ op_sum::apply_noalias(Mat<eT>& out, const Mat<eT>& A, const uword dim)
     
     cl_int status = 0;
     
-    cl_mem out_mem = out.get_device_mem(false);
-    cl_mem   A_mem =   A.get_device_mem(false);
+    cl_mem out_mem = out.get_dev_mem(false);
+    cl_mem   A_mem =   A.get_dev_mem(false);
     
     coot_runtime_t::adapt_uword A_n_rows(A.n_rows);
     coot_runtime_t::adapt_uword A_n_cols(A.n_cols);
@@ -193,8 +193,8 @@ op_sum::apply_noalias(Mat<eT>& out, const subview<eT>& sv, const uword dim)
     
     cl_int status = 0;
     
-    cl_mem  out_mem =  out.get_device_mem(false);
-    cl_mem sv_m_mem = sv.m.get_device_mem(false);
+    cl_mem  out_mem =  out.get_dev_mem(false);
+    cl_mem sv_m_mem = sv.m.get_dev_mem(false);
     
     coot_runtime_t::adapt_uword sv_m_n_rows(sv.m.n_rows);
     
@@ -227,8 +227,8 @@ op_sum::apply_noalias(Mat<eT>& out, const subview<eT>& sv, const uword dim)
     
     cl_int status = 0;
     
-    cl_mem  out_mem =  out.get_device_mem(false);
-    cl_mem sv_m_mem = sv.m.get_device_mem(false);
+    cl_mem  out_mem =  out.get_dev_mem(false);
+    cl_mem sv_m_mem = sv.m.get_dev_mem(false);
     
     coot_runtime_t::adapt_uword sv_m_n_rows(sv.m.n_rows);
     

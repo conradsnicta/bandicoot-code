@@ -52,8 +52,8 @@ eop_core<eop_type>::apply(Mat<typename T1::elem_type>& out, const eOp<T1, eop_ty
   else if(is_same_type<eop_type, eop_log              >::yes)  { kernel = coot_runtime.get_kernel<eT>(kernel_id::equ_array_log              ); }
   else { coot_debug_check(true, "fixme: unhandled eop_type"); }
   
-  cl_mem out_device_mem = out.get_device_mem(false);
-  cl_mem   A_device_mem =   A.get_device_mem(false);
+  cl_mem out_dev_mem = out.get_dev_mem(false);
+  cl_mem   A_dev_mem =   A.get_dev_mem(false);
   
   eT val = x.aux;
   
@@ -62,14 +62,14 @@ eop_core<eop_type>::apply(Mat<typename T1::elem_type>& out, const eOp<T1, eop_ty
   
   cl_int status = 0;
   
-  status |= clSetKernelArg(kernel, 0, sizeof(cl_mem), &out_device_mem);
-  status |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &  A_device_mem);
-  status |= clSetKernelArg(kernel, 2, sizeof(eT),     &val           );
-  status |= clSetKernelArg(kernel, 3, N.size,         N.addr         );
+  status |= clSetKernelArg(kernel, 0, sizeof(cl_mem), &out_dev_mem);
+  status |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &  A_dev_mem);
+  status |= clSetKernelArg(kernel, 2, sizeof(eT),     &val        );
+  status |= clSetKernelArg(kernel, 3, N.size,         N.addr      );
   
-  size_t global_work_size = size_t(n_elem);
+  size_t work_size = size_t(n_elem);
   
-  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, 1, NULL, &global_work_size, NULL, 0, NULL, NULL);
+  status |= clEnqueueNDRangeKernel(coot_runtime.get_cq(), kernel, 1, NULL, &work_size, NULL, 0, NULL, NULL);
   
   coot_check_runtime_error( (status != CL_SUCCESS), "eop_core: couldn't execute kernel" );
   }

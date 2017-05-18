@@ -38,7 +38,7 @@ class Mat : public Base< eT, Mat<eT> >
   
   private:
   
-  coot_aligned cl_mem device_mem;
+  coot_aligned cl_mem dev_mem;
   
   
   public:
@@ -48,12 +48,12 @@ class Mat : public Base< eT, Mat<eT> >
   
   inline explicit Mat(const uword in_rows, const uword in_cols);
   
-  inline Mat(cl_mem aux_device_mem, const uword in_rows, const uword in_cols);
+  inline Mat(cl_mem aux_dev_mem, const uword in_rows, const uword in_cols);
   
-  inline cl_mem get_device_mem(const bool sync = true) const;
+  inline cl_mem get_dev_mem(const bool sync = true) const;
   
-  inline void  copy_from_device_mem(      eT* dest_cpu_memptr, const uword N) const;
-  inline void  copy_to_device_mem  (const eT*  src_cpu_memptr, const uword N);
+  inline void  copy_from_dev_mem(      eT* dest_cpu_mem, const uword N) const;
+  inline void  copy_into_dev_mem(const eT*  src_cpu_mem, const uword N);
   
   inline const Mat& operator= (const eT val);
   inline const Mat& operator+=(const eT val);
