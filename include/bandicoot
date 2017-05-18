@@ -88,7 +88,7 @@ namespace coot
   
   #include "bandicoot_bits/kernel_id.hpp"
   #include "bandicoot_bits/kernel_src.hpp"
-  #include "bandicoot_bits/coot_runtime_bones.hpp"
+  #include "bandicoot_bits/coot_rt_bones.hpp"
   
   //
   // class prototypes
@@ -128,7 +128,7 @@ namespace coot
   //
   // runtime
   
-  #include "bandicoot_bits/coot_runtime_meat.hpp"
+  #include "bandicoot_bits/coot_rt_meat.hpp"
   
   
   //
