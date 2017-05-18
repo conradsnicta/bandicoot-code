@@ -110,6 +110,8 @@ namespace coot
   #include "bandicoot_bits/Op_bones.hpp"
   
   #include "bandicoot_bits/op_sum_bones.hpp"
+  #include "bandicoot_bits/op_htrans_bones.hpp"
+  #include "bandicoot_bits/op_strans_bones.hpp"
   
   #include "bandicoot_bits/wall_clock_bones.hpp"
   
@@ -148,6 +150,7 @@ namespace coot
   #include "bandicoot_bits/operator_div.hpp"
   //#include "bandicoot_bits/operator_ostream.hpp"
   
+  
   //
   // user accessible functions
   
@@ -159,6 +162,8 @@ namespace coot
   #include "bandicoot_bits/fn_trace.hpp"
   #include "bandicoot_bits/fn_accu.hpp"
   #include "bandicoot_bits/fn_sum.hpp"
+  #include "bandicoot_bits/fn_trans.hpp"
+  #include "bandicoot_bits/fn_strans.hpp"
   
   
   //
@@ -181,6 +186,8 @@ namespace coot
   #include "bandicoot_bits/Op_meat.hpp"
   
   #include "bandicoot_bits/op_sum_meat.hpp"
+  #include "bandicoot_bits/op_htrans_meat.hpp"
+  #include "bandicoot_bits/op_strans_meat.hpp"
   
   #include "bandicoot_bits/wall_clock_meat.hpp"
   }

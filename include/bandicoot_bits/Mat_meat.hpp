@@ -354,7 +354,9 @@ Mat<eT>::operator*=(const Mat<eT>& X)
   {
   coot_extra_debug_sigprint();
   
-  // TODO: matrix multiplication
+  Mat<eT> tmp = (*this) * X;
+  
+  (*this).steal_mem(tmp);
   
   return *this;
   }
@@ -436,19 +438,19 @@ Mat<eT>::steal_mem(Mat<eT>& X)
   
   if(this != &X)
     {
-    access::rw(n_rows)     = X.n_rows;
-    access::rw(n_cols)     = X.n_cols;
-    access::rw(n_elem)     = X.n_elem;
-    access::rw(vec_state)  = X.vec_state;
-    access::rw(mem_state)  = X.mem_state;
-    access::rw(dev_mem) = X.dev_mem;
+    access::rw(n_rows)    = X.n_rows;
+    access::rw(n_cols)    = X.n_cols;
+    access::rw(n_elem)    = X.n_elem;
+    access::rw(vec_state) = X.vec_state;
+    access::rw(mem_state) = X.mem_state;
+    access::rw(dev_mem)   = X.dev_mem;
     
-    access::rw(X.n_rows)     = 0;
-    access::rw(X.n_cols)     = 0;
-    access::rw(X.n_elem)     = 0;
-    access::rw(X.vec_state)  = 0;
-    access::rw(X.mem_state)  = 0;
-    access::rw(X.dev_mem) = NULL;
+    access::rw(X.n_rows)    = 0;
+    access::rw(X.n_cols)    = 0;
+    access::rw(X.n_elem)    = 0;
+    access::rw(X.vec_state) = 0;
+    access::rw(X.mem_state) = 0;
+    access::rw(X.dev_mem)   = NULL;
     }
   }
 
@@ -658,7 +660,9 @@ Mat<eT>::operator*=(const eOp<T1, eop_type>& X)
   {
   coot_extra_debug_sigprint();
   
-  // TODO: matrix multiplication
+  Mat<eT> tmp = (*this) * X;
+  
+  (*this).steal_mem(tmp);
   
   return *this;
   }
@@ -791,7 +795,9 @@ Mat<eT>::operator*=(const eGlue<T1, T2, eglue_type>& X)
   {
   coot_extra_debug_sigprint();
   
-  // TODO: matrix multiplication
+  Mat<eT> tmp = (*this) * X;
+  
+  (*this).steal_mem(tmp);
   
   return *this;
   }
@@ -914,7 +920,9 @@ Mat<eT>::operator*=(const Op<T1, op_type>& X)
   {
   coot_extra_debug_sigprint();
   
-  // TODO: matrix multiplication
+  Mat<eT> tmp = (*this) * X;
+  
+  (*this).steal_mem(tmp);
   
   return *this;
   }
@@ -947,6 +955,130 @@ Mat<eT>::operator/=(const Op<T1, op_type>& X)
   coot_extra_debug_sigprint();
   
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
+  
+  const Mat<eT> m(X);
+  
+  return (*this).operator/=(m);
+  }
+
+
+
+template<typename eT>
+template<typename T1, typename T2, typename glue_type>
+inline
+Mat<eT>::Mat(const Glue<T1, T2, glue_type>& X)
+  : n_rows   (0)
+  , n_cols   (0)
+  , n_elem   (0)
+  , vec_state(0)
+  , mem_state(0)
+  {
+  coot_extra_debug_sigprint_this(this);
+  
+  (*this).operator=(X);
+  }
+
+
+
+template<typename eT>
+template<typename T1, typename T2, typename glue_type>
+inline
+const Mat<eT>&
+Mat<eT>::operator=(const Glue<T1, T2, glue_type>& X)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
+  coot_type_check(( is_same_type< eT, typename T2::elem_type >::no ));
+  
+  glue_type::apply(*this, X);
+  
+  return *this;
+  }
+
+
+
+template<typename eT>
+template<typename T1, typename T2, typename glue_type>
+inline
+const Mat<eT>&
+Mat<eT>::operator+=(const Glue<T1, T2, glue_type>& X)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
+  coot_type_check(( is_same_type< eT, typename T2::elem_type >::no ));
+  
+  const Mat<eT> m(X);
+  
+  return (*this).operator+=(m);
+  }
+
+
+
+template<typename eT>
+template<typename T1, typename T2, typename glue_type>
+inline
+const Mat<eT>&
+Mat<eT>::operator-=(const Glue<T1, T2, glue_type>& X)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
+  coot_type_check(( is_same_type< eT, typename T2::elem_type >::no ));
+  
+  const Mat<eT> m(X);
+  
+  return (*this).operator-=(m);
+  }
+
+
+
+template<typename eT>
+template<typename T1, typename T2, typename glue_type>
+inline
+const Mat<eT>&
+Mat<eT>::operator*=(const Glue<T1, T2, glue_type>& X)
+  {
+  coot_extra_debug_sigprint();
+  
+  Mat<eT> tmp = (*this) * X;
+  
+  (*this).steal_mem(tmp);
+  
+  return *this;
+  }
+
+
+
+template<typename eT>
+template<typename T1, typename T2, typename glue_type>
+inline
+const Mat<eT>&
+Mat<eT>::operator%=(const Glue<T1, T2, glue_type>& X)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
+  coot_type_check(( is_same_type< eT, typename T2::elem_type >::no ));
+  
+  const Mat<eT> m(X);
+  
+  return (*this).operator%=(m);
+  }
+
+
+
+template<typename eT>
+template<typename T1, typename T2, typename glue_type>
+inline
+const Mat<eT>&
+Mat<eT>::operator/=(const Glue<T1, T2, glue_type>& X)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
+  coot_type_check(( is_same_type< eT, typename T2::elem_type >::no ));
   
   const Mat<eT> m(X);
   
