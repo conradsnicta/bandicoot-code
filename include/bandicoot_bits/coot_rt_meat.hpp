@@ -278,11 +278,17 @@ coot_rt_t::search_devices(cl_platform_id& out_plt_id, cl_device_id& out_dev_id, 
   
   if(manual_selection)
     {
+    if(wanted_platform >= platform_ids.size())
+      {
+      coot_debug_warn("invalid platform number");
+      return false;
+      }
+    
     std::vector<cl_device_id>& local_device_ids = device_ids.at(wanted_platform);
     
-    if((wanted_platform >= platform_ids.size()) || (wanted_device >= local_device_ids.size()))
+    if(wanted_device >= local_device_ids.size())
       {
-      coot_debug_warn("invalid platform and/or device number");
+      coot_debug_warn("invalid device number");
       return false;
       }
     
