@@ -8,8 +8,10 @@ main()
   {
   std::cout << coot::coot_version::as_string() << std::endl;
   
-  coot::coot_rt.init(true);
-  
+  //coot::coot_rt.init();
+  //coot::coot_rt.init(true);
+  coot::coot_rt.init(2,0);
+    
   arma::fmat A(5,5, arma::fill::randu); A -= 0.5;
   arma::fmat B(5,5, arma::fill::randu); B -= 0.5;
   

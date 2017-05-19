@@ -48,12 +48,13 @@ class coot_rt_t
   private:
   
   coot_aligned bool             valid;
-  coot_aligned coot_rt_dev_info dev_info;
   
-  coot_aligned cl_platform_id   platform_id;
-  coot_aligned cl_device_id     device_id;
-  coot_aligned cl_context       context;
+  coot_aligned cl_platform_id   plt_id;
+  coot_aligned cl_device_id     dev_id;
+  coot_aligned cl_context       ctxt;
   coot_aligned cl_command_queue cq;
+  
+  coot_aligned coot_rt_dev_info dev_info;
   
   coot_aligned std::vector<cl_kernel>  u32_kernels;
   coot_aligned std::vector<cl_kernel>  s32_kernels;
@@ -72,11 +73,13 @@ class coot_rt_t
   inline void unlock();  //! NOTE: do not call this function directly; it's automatically called when an instance of cq_guard goes out of scope
   
   inline void internal_cleanup();
-  inline bool internal_init(const bool manual_selection, const uword wanted_platform_id, const uword wanted_device_id, const bool print_info);
+  inline bool internal_init(const bool manual_selection, const uword wanted_platform, const uword wanted_device, const bool print_info);
   
-  inline bool find_device(const bool manual_selection, const uword wanted_platform_id, const uword wanted_device_id, const bool print_info);
+  inline bool search_devices(cl_platform_id& out_plat_id, cl_device_id& out_dev_id, const bool manual_selection, const uword wanted_platform, const uword wanted_device, const bool print_info) const;
   
-  inline bool interrogate_device(coot_rt_dev_info& out_info, cl_platform_id plat_id, cl_device_id dev_id, const bool print_info) const;
+  inline bool interrogate_device(coot_rt_dev_info& out_info, cl_platform_id in_plat_id, cl_device_id in_dev_id, const bool print_info) const;
+  
+  inline bool setup_queue(cl_context& out_context, cl_command_queue& out_queue, cl_platform_id in_plat_id, cl_device_id in_dev_id) const;
   
   template<typename eT>
   inline bool init_kernels(std::vector<cl_kernel>& kernels, const std::string& source, const std::vector<std::string>& names);
@@ -89,7 +92,7 @@ class coot_rt_t
   inline  coot_rt_t();
   
   inline bool init(const bool print_info = false);
-  inline bool init(const uword wanted_platform_id, const uword wanted_device_id, const bool print_info = false);
+  inline bool init(const uword wanted_platform, const uword wanted_device, const bool print_info = false);
   
   #if defined(COOT_USE_CXX11)
                    coot_rt_t(const coot_rt_t&) = delete;

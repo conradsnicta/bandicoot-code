@@ -286,8 +286,8 @@ subview<eT>::operator= (const Base<eT,T1>& in)
     // (beignet 1.3 crashes if clEnqueueCopyBufferRect() is used on entire range)
     if( (n_rows == m.n_rows) && (n_cols == m.n_cols) )
       {
-      Mat<eT>& X = const_cast< Mat<eT>& >(m);
-      X = in.get_ref();
+      Mat<eT>& mm = const_cast< Mat<eT>& >(m);
+      m = in.get_ref();
       return;
       }
     

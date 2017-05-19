@@ -31,11 +31,11 @@ coot_rt_t::coot_rt_t()
   {
   coot_extra_debug_sigprint_this(this);
   
-  valid       = false;
-  platform_id = NULL;
-  device_id   = NULL;
-  context     = NULL;
-  cq          = NULL;
+  valid   = false;
+  plt_id  = NULL;
+  dev_id  = NULL;
+  ctxt    = NULL;
+  cq      = NULL;
   }
 
 
@@ -53,11 +53,11 @@ coot_rt_t::init(const bool print_info)
 
 inline
 bool
-coot_rt_t::init(const uword wanted_platform_id, const uword wanted_device_id, const bool print_info)
+coot_rt_t::init(const uword wanted_platform, const uword wanted_device, const bool print_info)
   {
   coot_extra_debug_sigprint();
   
-  return internal_init(true, wanted_platform_id, wanted_device_id, print_info);
+  return internal_init(true, wanted_platform, wanted_device, print_info);
   }
 
 
@@ -110,29 +110,32 @@ coot_rt_t::internal_cleanup()
   
   for(uword i=0; i<f_kernels_size; ++i)  { if(f_kernels.at(i) != NULL)  { clReleaseKernel(f_kernels.at(i)); } }
   
-  if(cq      != NULL)  { clReleaseCommandQueue(cq); cq      = NULL; }
-  if(context != NULL)  { clReleaseContext(context); context = NULL; }
+  if(cq   != NULL)  { clReleaseCommandQueue(cq); cq   = NULL; }
+  if(ctxt != NULL)  { clReleaseContext(ctxt);    ctxt = NULL; }
   }
 
 
 
 inline
 bool
-coot_rt_t::internal_init(const bool manual_selection, const uword wanted_platform_id, const uword wanted_device_id, const bool print_info)
+coot_rt_t::internal_init(const bool manual_selection, const uword wanted_platform, const uword wanted_device, const bool print_info)
   {
   coot_extra_debug_sigprint();
   
-  if(valid)
-    {
-    internal_cleanup();
-    valid = false;
-    }
+  internal_cleanup();
+  valid = false;
   
   bool status = false;
   
-  status = find_device(manual_selection, wanted_platform_id, wanted_device_id, print_info);
+  status = search_devices(plt_id, dev_id, manual_selection, wanted_platform, wanted_device, print_info);
   if(status == false)  { coot_debug_warn("coot_rt: couldn't find a suitable device"); return false; }
   
+  interrogate_device(dev_info, plt_id, dev_id, print_info);
+  
+  if(dev_info.opencl_ver < 120)  { coot_debug_warn("coot_rt: selected device has OpenCL version < 1.2"); return false; }
+  
+  status = setup_queue(ctxt, cq, plt_id, dev_id);
+  if(status == false)  { coot_debug_warn("coot_rt: couldn't setuq queue"); return false; }
   
   // setup kernels
   
@@ -156,9 +159,14 @@ coot_rt_t::internal_init(const bool manual_selection, const uword wanted_platfor
   
   // setup clBLAS
   
-  coot_debug_warn("setup clBLAS: start");
+  
+  get_stream_err1().flush();
+  get_stream_err1() << "setup clBLAS: start" << endl;
+  
   cl_int clblas_status = clblasSetup();
-  coot_debug_warn("setup clBLAS: end");
+  
+  get_stream_err1().flush();
+  get_stream_err1() << "setup clBLAS: end" << endl;
     
   if(clblas_status != CL_SUCCESS)  { coot_debug_warn("coot_rt: couldn't setup clBLAS"); return false; }
   
@@ -170,6 +178,8 @@ coot_rt_t::internal_init(const bool manual_selection, const uword wanted_platfor
     return false;
     }
   
+  valid = true;
+  
   return true;
   }
 
@@ -177,9 +187,11 @@ coot_rt_t::internal_init(const bool manual_selection, const uword wanted_platfor
 
 inline
 bool
-coot_rt_t::find_device(const bool manual_selection, const uword wanted_platform_id, const uword wanted_device_id, const bool print_info)
+coot_rt_t::search_devices(cl_platform_id& out_plt_id, cl_device_id& out_dev_id, const bool manual_selection, const uword wanted_platform, const uword wanted_device, const bool print_info) const
   {
   coot_extra_debug_sigprint();
+  
+  // first, get a list of platforms and the devices on each platform
   
   cl_int  status      = 0;
   cl_uint n_platforms = 0;
@@ -188,7 +200,7 @@ coot_rt_t::find_device(const bool manual_selection, const uword wanted_platform_
   
   if((status != CL_SUCCESS) || (n_platforms == 0))
     {
-    coot_debug_warn("coot_rt_t::find_device(): no OpenCL platforms available");
+    coot_debug_warn("coot_rt_t::search_devices(): no OpenCL platforms available");
     return false;
     }
   
@@ -198,7 +210,7 @@ coot_rt_t::find_device(const bool manual_selection, const uword wanted_platform_
   
   if(status != CL_SUCCESS)
     {
-    coot_debug_warn("coot_rt_t::find_device(): couldn't get info on OpenCL platforms");
+    coot_debug_warn("coot_rt_t::search_devices(): couldn't get info on OpenCL platforms");
     return false;
     }
   
@@ -237,7 +249,7 @@ coot_rt_t::find_device(const bool manual_selection, const uword wanted_platform_
       if(print_info)
         {
         get_stream_err1().flush();
-        get_stream_err1() << "platform: " << platform_count << "   device: " << local_device_count << std::endl;
+        get_stream_err1() << "platform: " << platform_count << " / device: " << local_device_count << std::endl;
         }
       
       coot_rt_dev_info tmp_info;
@@ -264,88 +276,81 @@ coot_rt_t::find_device(const bool manual_selection, const uword wanted_platform_
     }
   
   
-  // find the device with highest priority
+  if(manual_selection)
+    {
+    std::vector<cl_device_id>& local_device_ids = device_ids.at(wanted_platform);
+    
+    if((wanted_platform >= platform_ids.size()) || (wanted_device >= local_device_ids.size()))
+      {
+      coot_debug_warn("invalid platform and/or device number");
+      return false;
+      }
+    
+    if(print_info)
+      {
+      get_stream_err1() << "selected: platform: " << wanted_platform << " / device: " << wanted_device << std::endl;
+      }
+    
+    out_plt_id = platform_ids.at(wanted_platform);
+    out_dev_id = local_device_ids.at(wanted_device);
+    
+    return true;
+    }
+  
+  
+  // select the device with highest priority
   
   bool found_device = false;
   
+  int    best_val          = -1;
+  size_t best_platform_num =  0;
+  size_t best_device_num   =  0;
   
-  if(manual_selection)
+  for(size_t platform_count = 0; platform_count < n_platforms; ++platform_count)
     {
-    // TODO: need to check for bounds
+    std::vector<cl_device_id>& local_device_ids = device_ids.at(platform_count);
+    std::vector<int>&          local_device_pri = device_pri.at(platform_count);
     
-    platform_id = platform_ids.at(wanted_platform_id);
+    size_t local_n_devices = local_device_ids.size();
     
-    std::vector<cl_device_id>& local_device_ids = device_ids.at(wanted_platform_id);
-    device_id = local_device_ids.at(wanted_device_id);
-    
-    found_device = true;
-    }
-  else
-    {
-    int best_val = -1;
-    
-    for(size_t platform_count = 0; platform_count < n_platforms; ++platform_count)
+    for(size_t local_device_count = 0; local_device_count < local_n_devices; ++local_device_count)
       {
-      std::vector<cl_device_id>& local_device_ids = device_ids.at(platform_count);
-      std::vector<int>&          local_device_pri = device_pri.at(platform_count);
+      const int tmp_val = local_device_pri.at(local_device_count);
       
-      size_t local_n_devices = local_device_ids.size();
+      // cout << "platform_count: " << platform_count << "  local_device_count: " << local_device_count << "  priority: " << tmp_val << "   best_val: " << best_val << endl;
       
-      for(size_t local_device_count = 0; local_device_count < local_n_devices; ++local_device_count)
+      if(best_val < tmp_val)
         {
-        const int tmp_val = local_device_pri.at(local_device_count);
+        best_val          = tmp_val;
+        best_platform_num = platform_count;
+        best_device_num   = local_device_count;
         
-        // cout << "platform_count: " << platform_count << "  local_device_count: " << local_device_count << "  priority: " << tmp_val << "   best_val: " << best_val << endl;
-        
-        if(best_val < tmp_val)
-          {
-          best_val = tmp_val;
-          
-          found_device = true;
-          
-          platform_id = platform_ids.at(platform_count);
-          device_id   = local_device_ids.at(local_device_count);
-          }
+        found_device = true;
         }
       }
     }
   
-  
-  if(found_device == false)
+  if(found_device)
     {
-    coot_debug_warn("coot_rt_t::find_device(): couldn't find a suitable device");
-    return false;
+    if(print_info)
+      {
+      get_stream_err1() << "selected: platform: " << best_platform_num << " / device: " << best_device_num << std::endl;
+      }
+    
+    std::vector<cl_device_id>& local_device_ids = device_ids.at(best_platform_num);
+    
+    out_plt_id = platform_ids.at(best_platform_num);
+    out_dev_id = local_device_ids.at(best_device_num);
     }
-  
-  
-  cl_context_properties properties[3] = { CL_CONTEXT_PLATFORM, cl_context_properties(platform_id), 0 };
-  
-  status = 0;
-  context = clCreateContext(properties, 1, &device_id, NULL, NULL, &status);
-  
-  if((status != CL_SUCCESS) || (context == NULL))
-    {
-    coot_debug_warn("coot_rt_t::find_device(): couldn't create context");
-    return false;
-    }
-  
-  status = 0;
-  cq = clCreateCommandQueue(context, device_id, 0, &status);
-  
-  if((status != CL_SUCCESS) || (cq == NULL))
-    {
-    coot_debug_warn("coot_rt_t::find_device(): couldn't create command queue");
-    return false;
-    }
-  
-  return true;
+     
+  return found_device;
   }
 
 
 
 inline
 bool
-coot_rt_t::interrogate_device(coot_rt_dev_info& out_info, cl_platform_id plat_id, cl_device_id dev_id, const bool print_info) const
+coot_rt_t::interrogate_device(coot_rt_dev_info& out_info, cl_platform_id in_plt_id, cl_device_id in_dev_id, const bool print_info) const
   {
   coot_extra_debug_sigprint();
   
@@ -367,13 +372,13 @@ coot_rt_t::interrogate_device(coot_rt_dev_info& out_info, cl_platform_id plat_id
   cl_uint dev_align       = 0;
   
   
-  clGetDeviceInfo(dev_id, CL_DEVICE_VENDOR,              sizeof(dev_name1),           &dev_name1,   NULL);
-  clGetDeviceInfo(dev_id, CL_DEVICE_NAME,                sizeof(dev_name2),           &dev_name2,   NULL);
-  clGetDeviceInfo(dev_id, CL_DEVICE_VERSION,             sizeof(dev_name3),           &dev_name3,   NULL);
-  clGetDeviceInfo(dev_id, CL_DEVICE_TYPE,                sizeof(cl_device_type),      &dev_type,    NULL);
-  clGetDeviceInfo(dev_id, CL_DEVICE_DOUBLE_FP_CONFIG,    sizeof(cl_device_fp_config), &dev_fp64,    NULL);
-  clGetDeviceInfo(dev_id, CL_DEVICE_MAX_COMPUTE_UNITS,   sizeof(cl_uint),             &dev_n_units, NULL);
-  clGetDeviceInfo(dev_id, CL_DEVICE_MEM_BASE_ADDR_ALIGN, sizeof(cl_uint),             &dev_align,   NULL);
+  clGetDeviceInfo(in_dev_id, CL_DEVICE_VENDOR,              sizeof(dev_name1),           &dev_name1,   NULL);
+  clGetDeviceInfo(in_dev_id, CL_DEVICE_NAME,                sizeof(dev_name2),           &dev_name2,   NULL);
+  clGetDeviceInfo(in_dev_id, CL_DEVICE_VERSION,             sizeof(dev_name3),           &dev_name3,   NULL);
+  clGetDeviceInfo(in_dev_id, CL_DEVICE_TYPE,                sizeof(cl_device_type),      &dev_type,    NULL);
+  clGetDeviceInfo(in_dev_id, CL_DEVICE_DOUBLE_FP_CONFIG,    sizeof(cl_device_fp_config), &dev_fp64,    NULL);
+  clGetDeviceInfo(in_dev_id, CL_DEVICE_MAX_COMPUTE_UNITS,   sizeof(cl_uint),             &dev_n_units, NULL);
+  clGetDeviceInfo(in_dev_id, CL_DEVICE_MEM_BASE_ADDR_ALIGN, sizeof(cl_uint),             &dev_align,   NULL);
   
   // contrary to the official OpenCL specification (OpenCL 1.2, sec 4.2 and sec 6.1.1).
   // certain OpenCL implementations use internal size_t which doesn't correspond to CL_DEVICE_ADDRESS_BITS
@@ -402,51 +407,47 @@ coot_rt_t::interrogate_device(coot_rt_dev_info& out_info, cl_platform_id plat_id
   
   cl_int status = 0;
   
-  cl_context_properties tmp_prop[3] = { CL_CONTEXT_PLATFORM, cl_context_properties(plat_id), 0 };
-  
-  tmp_context = clCreateContext(tmp_prop, 1, &dev_id, NULL, NULL, &status);
-  
-  if(status == CL_SUCCESS)
+  if(setup_queue(tmp_context, tmp_queue, in_plt_id, in_dev_id))
     {
-    // NOTE: clCreateCommandQueue is deprecated as of OpenCL 2.0, but it will be supported for the "foreseeable future"
-    // NOTE: clCreateCommandQueue is replaced with clCreateCommandQueueWithProperties in OpenCL 2.0
-    // NOTE: http://stackoverflow.com/questions/28500496/opencl-function-found-deprecated-by-visual-studio
-    
-    tmp_queue = clCreateCommandQueue(tmp_context, dev_id, 0, &status);
+    tmp_program = clCreateProgramWithSource(tmp_context, 1, (const char **)&(tmp_program_src), NULL, &status);
     
     if(status == CL_SUCCESS)
       {
-      tmp_program = clCreateProgramWithSource(tmp_context, 1, (const char **)&(tmp_program_src), NULL, &status);
+      status = clBuildProgram(tmp_program, 0, NULL, NULL, NULL, NULL);
+      
+      // cout << "status: " << coot_cl_error::as_string(status) << endl;
+      // 
+      // size_t len = 0;
+      // char buffer[10240];
+      // 
+      // clGetProgramBuildInfo(tmp_program, in_dev_id, CL_PROGRAM_BUILD_LOG, sizeof(buffer), buffer, &len);
+      // std::cout << "output from clGetProgramBuildInfo():" << std::endl;
+      // std::cout << buffer << std::endl;
       
       if(status == CL_SUCCESS)
         {
-        status = clBuildProgram(tmp_program, 0, NULL, NULL, NULL, NULL);
+        tmp_kernel = clCreateKernel(tmp_program, "coot_interrogate", &status);
         
         if(status == CL_SUCCESS)
           {
-          tmp_kernel = clCreateKernel(tmp_program, "coot_interrogate", &status);
+          tmp_dev_mem = clCreateBuffer(tmp_context, CL_MEM_READ_WRITE, sizeof(cl_uint)*4, NULL, &status);
+          
+          clSetKernelArg(tmp_kernel, 0, sizeof(cl_mem),  &tmp_dev_mem);
+          status = clEnqueueTask(tmp_queue, tmp_kernel, 0, NULL, NULL);  // TODO: replace with clEnqueueNDRangeKernel to avoid deprecation warnings
           
           if(status == CL_SUCCESS)
             {
-            tmp_dev_mem = clCreateBuffer(tmp_context, CL_MEM_READ_WRITE, sizeof(cl_uint)*4, NULL, &status);
+            clFinish(cq);
             
-            clSetKernelArg(tmp_kernel, 0, sizeof(cl_mem),  &tmp_dev_mem);
-            status = clEnqueueTask(tmp_queue, tmp_kernel, 0, NULL, NULL);  // TODO: replace with clEnqueueNDRangeKernel to avoid deprecation warnings
+            status = clEnqueueReadBuffer(tmp_queue, tmp_dev_mem, CL_TRUE, 0, sizeof(cl_uint)*4, tmp_cpu_mem, 0, NULL, NULL);
             
             if(status == CL_SUCCESS)
               {
               clFinish(cq);
               
-              status = clEnqueueReadBuffer(tmp_queue, tmp_dev_mem, CL_TRUE, 0, sizeof(cl_uint)*4, tmp_cpu_mem, 0, NULL, NULL);
-              
-              if(status == CL_SUCCESS)
-                {
-                clFinish(cq);
-                
-                dev_sizet_width = tmp_cpu_mem[0];
-                dev_ptr_width   = tmp_cpu_mem[1];
-                dev_opencl_ver  = tmp_cpu_mem[2];
-                }
+              dev_sizet_width = tmp_cpu_mem[0];
+              dev_ptr_width   = tmp_cpu_mem[1];
+              dev_opencl_ver  = tmp_cpu_mem[2];
               }
             }
           }
@@ -492,6 +493,42 @@ coot_rt_t::interrogate_device(coot_rt_dev_info& out_info, cl_platform_id plat_id
 
 
 
+
+inline
+bool
+coot_rt_t::setup_queue(cl_context& out_context, cl_command_queue& out_queue, cl_platform_id in_plat_id, cl_device_id in_dev_id) const
+  {
+  coot_extra_debug_sigprint();
+  
+  cl_context_properties prop[3] = { CL_CONTEXT_PLATFORM, cl_context_properties(in_plat_id), 0 };
+  
+  cl_int status = 0;
+  
+  out_context = clCreateContext(prop, 1, &in_dev_id, NULL, NULL, &status);
+  
+  if((status != CL_SUCCESS) || (out_context == NULL))
+    {
+    coot_debug_warn(coot_cl_error::as_string(status));
+    return false;
+    }
+  
+  // NOTE: clCreateCommandQueue is deprecated as of OpenCL 2.0, but it will be supported for the "foreseeable future"
+  // NOTE: clCreateCommandQueue is replaced with clCreateCommandQueueWithProperties in OpenCL 2.0
+  // NOTE: http://stackoverflow.com/questions/28500496/opencl-function-found-deprecated-by-visual-studio
+    
+  out_queue = clCreateCommandQueue(out_context, in_dev_id, 0, &status);
+  
+  if((status != CL_SUCCESS) || (out_queue == NULL))
+    {
+    coot_debug_warn(coot_cl_error::as_string(status));
+    return false;
+    }
+  
+  return true;
+  }
+
+
+
 template<typename eT>
 inline
 bool
@@ -517,7 +554,7 @@ coot_rt_t::init_kernels(std::vector<cl_kernel>& kernels, const std::string& sour
   
   const char* source_c_str = source.c_str();
   
-  prog_holder.prog = clCreateProgramWithSource(context, 1, &source_c_str, NULL, &status);
+  prog_holder.prog = clCreateProgramWithSource(ctxt, 1, &source_c_str, NULL, &status);
   
   if((status != CL_SUCCESS) || (prog_holder.prog == NULL))
     {
@@ -623,7 +660,7 @@ coot_rt_t::init_kernels(std::vector<cl_kernel>& kernels, const std::string& sour
     size_t len = 0;
     char buffer[10240];  // TODO: use std::vector<char> or podarray
 
-    clGetProgramBuildInfo(prog_holder.prog, device_id, CL_PROGRAM_BUILD_LOG, sizeof(buffer), buffer, &len);
+    clGetProgramBuildInfo(prog_holder.prog, dev_id, CL_PROGRAM_BUILD_LOG, sizeof(buffer), buffer, &len);
     std::cout << "coot_rt::init_kernels(): couldn't build program;"              << std::endl;
     std::cout << "coot_rt::init_kernels(): output from clGetProgramBuildInfo():" << std::endl;
     std::cout << buffer << std::endl;
@@ -711,7 +748,7 @@ coot_rt_t::acquire_memory(const uword n_elem)
    );
   
   cl_int status = 0;
-  cl_mem dev_mem = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(eT)*(std::max)(uword(1), n_elem), NULL, &status);
+  cl_mem dev_mem = clCreateBuffer(ctxt, CL_MEM_READ_WRITE, sizeof(eT)*(std::max)(uword(1), n_elem), NULL, &status);
   
   coot_check_bad_alloc( ((status != CL_SUCCESS) || (dev_mem == NULL)), "coot_rt::acquire_memory(): not enough memory on device" );
   
@@ -741,7 +778,7 @@ coot_rt_t::get_context()
   
   coot_debug_check( (valid == false), "coot_rt not valid" );
   
-  return context;
+  return ctxt;
   }
 
 
