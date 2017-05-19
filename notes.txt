@@ -1,5 +1,7 @@
 TODO
 
+investigate use of clBLAS axpy() for simple addition and subtraction of arrays
+
 handle 64 bit integers on GPU side
 if bcoot_64bit_word is enabled, use 64 bit integers on GPU side (if available)
 this will require making 2 versions of each kernel
