@@ -152,7 +152,7 @@ struct partial_unwrap
   typedef Mat<eT>                stored_type;
   
   inline
-  partial_unwrap_default(const T1& A)
+  partial_unwrap(const T1& A)
     : M(A)
     {
     coot_extra_debug_sigprint();
@@ -270,6 +270,7 @@ struct partial_unwrap< Op<T1, op_htrans2> >
 
 
 
+template<typename eT>
 struct partial_unwrap< Op< Mat<eT>, op_htrans2> >
   {
   typedef Mat<eT> stored_type;

@@ -108,11 +108,14 @@ namespace coot
   #include "bandicoot_bits/eop_core_bones.hpp"
   #include "bandicoot_bits/eglue_core_bones.hpp"
   #include "bandicoot_bits/Op_bones.hpp"
+  #include "bandicoot_bits/Glue_bones.hpp"
   
   #include "bandicoot_bits/op_sum_bones.hpp"
   #include "bandicoot_bits/op_htrans_bones.hpp"
   #include "bandicoot_bits/op_strans_bones.hpp"
   
+  #include "bandicoot_bits/glue_times_bones.hpp"
+
   #include "bandicoot_bits/wall_clock_bones.hpp"
   
   //
@@ -120,6 +123,7 @@ namespace coot
   
   #include "bandicoot_bits/debug.hpp"
   #include "bandicoot_bits/cpu_memory.hpp"
+  
   
   //
   // wrappers for various cmath functions
@@ -169,6 +173,9 @@ namespace coot
   //
   // class meat
   
+  #include "bandicoot_bits/mul_gemv.hpp"
+  #include "bandicoot_bits/mul_gemm.hpp"
+  
   #include "bandicoot_bits/cond_rel_meat.hpp"
   
   #include "bandicoot_bits/Base_meat.hpp"
@@ -184,10 +191,13 @@ namespace coot
   #include "bandicoot_bits/eop_core_meat.hpp"
   #include "bandicoot_bits/eglue_core_meat.hpp"
   #include "bandicoot_bits/Op_meat.hpp"
+  #include "bandicoot_bits/Glue_meat.hpp"
   
   #include "bandicoot_bits/op_sum_meat.hpp"
   #include "bandicoot_bits/op_htrans_meat.hpp"
   #include "bandicoot_bits/op_strans_meat.hpp"
+  
+  #include "bandicoot_bits/glue_times_meat.hpp"
   
   #include "bandicoot_bits/wall_clock_meat.hpp"
   }

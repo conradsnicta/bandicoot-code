@@ -57,19 +57,18 @@ class gemm
     const size_t N = size_t(C.n_cols);
     const size_t K = (do_trans_A) ? size_t(A.n_rows) : size_t(A.n_cols);
     
-    const float local_alpha = (use_alpha) ? alpha : eT(1);
-    
     const size_t lda = (do_trans_A) ? K : M;
     const size_t ldb = (do_trans_B) ? N : K;
     const size_t ldc = size_t(C.n_rows);
     
-    const eT local_beta = (use_beta) ? beta : eT(0);
+    const float local_alpha = (use_alpha) ? alpha : float(1);
+    const float local_beta  = (use_beta)  ? beta  : float(0);
     
     cl_mem A_mem = A.get_dev_mem(false);
     cl_mem B_mem = B.get_dev_mem(false);
     cl_mem C_mem = C.get_dev_mem(false);
     
-    cl_command_queue queue = bandicoot_rt.get_cq();
+    cl_command_queue queue = coot_rt.get_cq();
     
     cl_int status = 0;
     

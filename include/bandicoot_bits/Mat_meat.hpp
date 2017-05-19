@@ -138,6 +138,53 @@ Mat<eT>::copy_into_dev_mem(const eT* src_cpu_memptr, const uword N)
 
 template<typename eT>
 inline
+Mat<eT>::Mat(const arma::Mat<eT>& X)
+  : n_rows   (0)
+  , n_cols   (0)
+  , n_elem   (0)
+  , vec_state(0)
+  , mem_state(0)
+  {
+  coot_extra_debug_sigprint_this(this);
+  
+  (*this).operator=(X);
+  }
+
+
+
+template<typename eT>
+inline
+const Mat<eT>&
+Mat<eT>::operator=(const arma::Mat<eT>& X)
+  {
+  coot_extra_debug_sigprint();
+  
+  (*this).set_size(X.n_rows, X.n_cols);
+  
+  (*this).copy_into_dev_mem(X.memptr(), (*this).n_elem);
+  
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
+Mat<eT>::operator arma::Mat<eT> () const
+  {
+  coot_extra_debug_sigprint();
+  
+  arma::Mat<eT> out(n_rows, n_cols);
+  
+  (*this).copy_from_dev_mem(out.memptr(), (*this).n_elem);
+  
+  return out;
+  }
+
+
+
+template<typename eT>
+inline
 void
 Mat<eT>::cleanup()
   {

@@ -44,7 +44,7 @@ const Op<T1, op_htrans>
 strans
   (
   const Base<typename T1::elem_type,T1>& X,
-  const typename coot_not_cx<typename T1::elem_type>::result* junk1 = 0
+  const typename coot_not_cx<typename T1::elem_type>::result* junk = 0
   )
   {
   coot_extra_debug_sigprint();

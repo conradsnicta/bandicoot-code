@@ -55,8 +55,8 @@ class gemv
     const size_t M = size_t(A.n_rows);
     const size_t N = size_t(A.n_cols);
     
-    const float local_alpha = (use_alpha) ? alpha : eT(1);
-    const float local_beta  = (use_beta)  ? beta  : eT(0);
+    const float local_alpha = (use_alpha) ? alpha : float(1);
+    const float local_beta  = (use_beta)  ? beta  : float(0);
     
     const size_t lda = size_t(A.n_rows);
     const size_t inc = size_t(1);
@@ -65,7 +65,7 @@ class gemv
     cl_mem x_mem = x.get_dev_mem(false);
     cl_mem y_mem = y.get_dev_mem(false);
     
-    cl_command_queue queue = bandicoot_rt.get_cq();
+    cl_command_queue queue = coot_rt.get_cq();
     
     cl_int status = 0;
     

@@ -48,7 +48,7 @@ op_strans::apply(Mat<typename T1::elem_type>& out, const Op<T1,op_strans>& in)
 template<typename eT>
 inline
 void
-op_strans::apply_noalias(Mat<eT>& out, const Mat<eT>& A, const typename coot_not_cx<eT>::result* junk)
+op_strans::apply_noalias(Mat<eT>& out, const Mat<eT>& A)
   {
   coot_extra_debug_sigprint();
   

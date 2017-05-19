@@ -55,6 +55,11 @@ class Mat : public Base< eT, Mat<eT> >
   inline void  copy_from_dev_mem(      eT* dest_cpu_mem, const uword N) const;
   inline void  copy_into_dev_mem(const eT*  src_cpu_mem, const uword N);
   
+  inline                  Mat(const arma::Mat<eT>& X);
+  inline const Mat& operator=(const arma::Mat<eT>& X);
+  
+  inline explicit operator arma::Mat<eT> () const;
+  
   inline const Mat& operator= (const eT val);
   inline const Mat& operator+=(const eT val);
   inline const Mat& operator-=(const eT val);
