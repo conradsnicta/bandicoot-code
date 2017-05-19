@@ -19,7 +19,9 @@ coot_rt_t::~coot_rt_t()
   {
   coot_extra_debug_sigprint_this(this);
   
-  cleanup_cl();
+  internal_cleanup();
+  
+  valid = false;
   }
 
 
@@ -29,69 +31,33 @@ coot_rt_t::coot_rt_t()
   {
   coot_extra_debug_sigprint_this(this);
   
+  valid       = false;
   platform_id = NULL;
   device_id   = NULL;
   context     = NULL;
   cq          = NULL;
+  }
+
+
+
+inline
+bool
+coot_rt_t::init(const bool print_info)
+  {
+  coot_extra_debug_sigprint();
   
-  valid              = false;
-  device_64bit_sizet = false;
-  device_64bit_float = false;
+  return internal_init(false, 0, 0, print_info);
+  }
+
+
+
+inline
+bool
+coot_rt_t::init(const uword wanted_platform_id, const uword wanted_device_id, const bool print_info)
+  {
+  coot_extra_debug_sigprint();
   
-  
-  bool status = false;
-  
-  std::string errmsg;
-  
-  status = init_cl(errmsg, false, 0, 0);
-  
-  if(status == false)
-    {
-    std::stringstream ss;
-    
-    ss << "coot_rt: couldn't setup OpenCL: " << errmsg;
-    coot_warn(ss.str());
-    }
-  
-  interrogate_device(true);
-  
-  if(status != false)
-    {
-    status = init_kernels<u32>(u32_kernels, kernel_src::get_source(), kernel_id::get_names());
-    if(status == false)  { coot_warn("coot_rt: couldn't setup OpenCL kernels"); }
-    
-    status = init_kernels<s32>(s32_kernels, kernel_src::get_source(), kernel_id::get_names());
-    if(status == false)  { coot_warn("coot_rt: couldn't setup OpenCL kernels"); }
-    
-    status = init_kernels<u64>(u64_kernels, kernel_src::get_source(), kernel_id::get_names());
-    if(status == false)  { coot_warn("coot_rt: couldn't setup OpenCL kernels"); }
-    
-    status = init_kernels<s64>(s64_kernels, kernel_src::get_source(), kernel_id::get_names());
-    if(status == false)  { coot_warn("coot_rt: couldn't setup OpenCL kernels"); }
-    
-    status = init_kernels<float>(f_kernels, kernel_src::get_source(), kernel_id::get_names());
-    if(status == false)  { coot_warn("coot_rt: couldn't setup OpenCL kernels"); }
-    }
-  
-  // TODO: determine if 64 bit floats are supported
-  // TODO: if 64 bit floats are supported, initialise double kernels
-  
-  if(status != false)
-    {
-    // TODO: make call to clblasSetup() conditional on clBLAS being available
-    cl_int clblas_status = clblasSetup();
-    
-    if(clblas_status != CL_SUCCESS)  { coot_warn("coot_rt: couldn't setup clBLAS"); }
-    }
-  
-  if(status == true)
-    {
-    (*this).valid = true;
-    }
-  else
-    {
-    cleanup_cl();
-    }
+  return internal_init(true, wanted_platform_id, wanted_device_id, print_info);
   }
 
 
@@ -130,15 +96,13 @@ coot_rt_t::unlock()
 
 inline
 void
-coot_rt_t::cleanup_cl()
+coot_rt_t::internal_cleanup()
   {
   coot_extra_debug_sigprint();
   
-  valid = false;
-  
   if(cq != NULL)  { clFinish(cq); }
   
-  clblasTeardown();  // TODO: make this conditional on clBLAS being available
+  clblasTeardown();
   
   // TODO: go through each kernel vector
   
@@ -154,7 +118,66 @@ coot_rt_t::cleanup_cl()
 
 inline
 bool
-coot_rt_t::init_cl(std::string& out_errmsg, const bool manual_selection, const uword wanted_platform_id, const uword wanted_device_id)
+coot_rt_t::internal_init(const bool manual_selection, const uword wanted_platform_id, const uword wanted_device_id, const bool print_info)
+  {
+  coot_extra_debug_sigprint();
+  
+  if(valid)
+    {
+    internal_cleanup();
+    valid = false;
+    }
+  
+  bool status = false;
+  
+  status = find_device(manual_selection, wanted_platform_id, wanted_device_id, print_info);
+  if(status == false)  { coot_debug_warn("coot_rt: couldn't find a suitable device"); return false; }
+  
+  
+  // setup kernels
+  
+  status = init_kernels<u32>(u32_kernels, kernel_src::get_source(), kernel_id::get_names());
+  if(status == false)  { coot_debug_warn("coot_rt: couldn't setup OpenCL kernels"); return false; }
+  
+  status = init_kernels<s32>(s32_kernels, kernel_src::get_source(), kernel_id::get_names());
+  if(status == false)  { coot_debug_warn("coot_rt: couldn't setup OpenCL kernels"); return false; }
+  
+  status = init_kernels<u64>(u64_kernels, kernel_src::get_source(), kernel_id::get_names());
+  if(status == false)  { coot_debug_warn("coot_rt: couldn't setup OpenCL kernels"); return false; }
+  
+  status = init_kernels<s64>(s64_kernels, kernel_src::get_source(), kernel_id::get_names());
+  if(status == false)  { coot_debug_warn("coot_rt: couldn't setup OpenCL kernels"); return false; }
+  
+  status = init_kernels<float>(f_kernels, kernel_src::get_source(), kernel_id::get_names());
+  if(status == false)  { coot_debug_warn("coot_rt: couldn't setup OpenCL kernels"); return false; }
+  
+  // TODO: if 64 bit floats are supported, initialise double kernels
+  
+  
+  // setup clBLAS
+  
+  coot_debug_warn("setup clBLAS: start");
+  cl_int clblas_status = clblasSetup();
+  coot_debug_warn("setup clBLAS: end");
+    
+  if(clblas_status != CL_SUCCESS)  { coot_debug_warn("coot_rt: couldn't setup clBLAS"); return false; }
+  
+  if(status == false)
+    {
+    internal_cleanup();
+    valid = false;
+    
+    return false;
+    }
+  
+  return true;
+  }
+
+
+
+inline
+bool
+coot_rt_t::find_device(const bool manual_selection, const uword wanted_platform_id, const uword wanted_device_id, const bool print_info)
   {
   coot_extra_debug_sigprint();
   
@@ -165,7 +188,7 @@ coot_rt_t::init_cl(std::string& out_errmsg, const bool manual_selection, const u
   
   if((status != CL_SUCCESS) || (n_platforms == 0))
     {
-    out_errmsg = "no OpenCL platforms available";
+    coot_debug_warn("coot_rt_t::find_device(): no OpenCL platforms available");
     return false;
     }
   
@@ -175,7 +198,7 @@ coot_rt_t::init_cl(std::string& out_errmsg, const bool manual_selection, const u
   
   if(status != CL_SUCCESS)
     {
-    out_errmsg = "couldn't get info on OpenCL platforms";
+    coot_debug_warn("coot_rt_t::find_device(): couldn't get info on OpenCL platforms");
     return false;
     }
   
@@ -209,66 +232,34 @@ coot_rt_t::init_cl(std::string& out_errmsg, const bool manual_selection, const u
     // go through each device on this platform
     for(size_t local_device_count = 0; local_device_count < local_n_devices; ++local_device_count)
       {
-      local_device_pri.at(local_device_count) = 0;
-      
       cl_device_id local_device_id = local_device_ids.at(local_device_count);
       
-      cl_device_type      device_type_val = 0;
-      cl_device_fp_config device_fp64_val = 0;
-      
-      char device_vstr[1024];
-      
-      status = 0;
-      
-      status |= clGetDeviceInfo(local_device_id, CL_DEVICE_TYPE,             sizeof(cl_device_type),      &device_type_val, NULL);
-      status |= clGetDeviceInfo(local_device_id, CL_DEVICE_DOUBLE_FP_CONFIG, sizeof(cl_device_fp_config), &device_fp64_val, NULL);
-      status |= clGetDeviceInfo(local_device_id, CL_DEVICE_VERSION,          sizeof(device_vstr),         &device_vstr,     NULL);
-      
-      if(status != CL_SUCCESS)
+      if(print_info)
         {
-        out_errmsg = "couldn't get device info";
-        return false;
+        get_stream_err1().flush();
+        get_stream_err1() << "platform: " << platform_count << "   device: " << local_device_count << std::endl;
         }
       
-      // extract OpenCL version
-      device_vstr[ sizeof(device_vstr)-1 ] = char(0);  // ensure the array is null terminated
-      const std::string tmp_str(device_vstr);
+      coot_rt_dev_info tmp_info;
       
-      // find the gaps in the version string, in case each version number becomes more than one digit
+      const bool ok = interrogate_device(tmp_info, tmp_platform_id, local_device_id, print_info);
       
-      std::string::size_type skip = tmp_str.find_first_of(" ");  // skip "OpenCL" at the start
-      
-      std::string::size_type major_ver_start = tmp_str.find_first_not_of(" ", skip           );
-      std::string::size_type major_ver_end   = tmp_str.find_first_of    (".", major_ver_start);
-      std::string::size_type minor_ver_start = tmp_str.find_first_not_of(".", major_ver_end  );
-      std::string::size_type minor_ver_end   = tmp_str.find_first_of    (" ", minor_ver_start);
-      
-      if( (skip == std::string::npos) || (major_ver_start == std::string::npos) || (major_ver_end == std::string::npos) || (minor_ver_end == std::string::npos) )
+      if(print_info)
         {
-        out_errmsg = "device has garbled OpenCL version string";
-        return false;
+        if(ok == false)
+          {
+          get_stream_err1().flush();
+          get_stream_err1() << "problem with getting info about device" << std::endl;
+          }
+        
+        get_stream_err1() << std::endl;
         }
       
-      major_ver_end--;
-      minor_ver_end--;
+      local_device_pri.at(local_device_count) = 0;
       
-      std::istringstream major_ver_ss( tmp_str.substr(major_ver_start, major_ver_end - major_ver_start + 1) );
-      std::istringstream minor_ver_ss( tmp_str.substr(minor_ver_start, minor_ver_end - minor_ver_start + 1) );
-      
-      uword major_ver = 0;
-      uword minor_ver = 0;
-      
-      major_ver_ss >> major_ver;
-      minor_ver_ss >> minor_ver;
-      
-      const bool device_ver_ok = ( (major_ver >= 2) || ( (major_ver >= 1) && (minor_ver >= 2) ) );
-      
-      // prefer GPUs over CPUs and other devices
-      // prefer devices with 64 bit float support
-      // prefer devices with OpenCL 1.2 or greater
-      if(device_type_val == CL_DEVICE_TYPE_GPU)  { local_device_pri.at(local_device_count) +=  2; }
-      if(device_fp64_val != 0                 )  { local_device_pri.at(local_device_count) +=  1; }
-      if(device_ver_ok   == false             )  { local_device_pri.at(local_device_count)  = -1; }
+      if(tmp_info.is_gpu)           { local_device_pri.at(local_device_count) +=  2; }
+      if(tmp_info.has_float64)      { local_device_pri.at(local_device_count) +=  1; }
+      if(tmp_info.opencl_ver < 120) { local_device_pri.at(local_device_count)  = -1; }
       }
     }
   
@@ -322,10 +313,9 @@ coot_rt_t::init_cl(std::string& out_errmsg, const bool manual_selection, const u
   
   if(found_device == false)
     {
-    out_errmsg = "couldn't find a suitable device";
+    coot_debug_warn("coot_rt_t::find_device(): couldn't find a suitable device");
     return false;
     }
-  
   
   
   cl_context_properties properties[3] = { CL_CONTEXT_PLATFORM, cl_context_properties(platform_id), 0 };
@@ -335,20 +325,16 @@ coot_rt_t::init_cl(std::string& out_errmsg, const bool manual_selection, const u
   
   if((status != CL_SUCCESS) || (context == NULL))
     {
-    out_errmsg = "couldn't create context";
+    coot_debug_warn("coot_rt_t::find_device(): couldn't create context");
     return false;
     }
   
   status = 0;
   cq = clCreateCommandQueue(context, device_id, 0, &status);
   
-  // NOTE: http://stackoverflow.com/questions/28500496/opencl-function-found-deprecated-by-visual-studio
-  // NOTE: clCreateCommandQueue is deprecated as of OpenCL 2.0, but it will be supported for the "foreseeable future"
-  // NOTE: clCreateCommandQueue is replaced with clCreateCommandQueueWithProperties in OpenCL 2.0
-  
   if((status != CL_SUCCESS) || (cq == NULL))
     {
-    out_errmsg = "couldn't create command queue";
+    coot_debug_warn("coot_rt_t::find_device(): couldn't create command queue");
     return false;
     }
   
@@ -356,65 +342,44 @@ coot_rt_t::init_cl(std::string& out_errmsg, const bool manual_selection, const u
   }
 
 
+
 inline
 bool
-coot_rt_t::interrogate_device(const bool print_details)
+coot_rt_t::interrogate_device(coot_rt_dev_info& out_info, cl_platform_id plat_id, cl_device_id dev_id, const bool print_info) const
   {
   coot_extra_debug_sigprint();
   
-  // TODO: optionally disable/enable printing the device details ?  (eg. when COOT_EXTRA_DEBUG is enabled)
+  cl_char dev_name1[1024]; // TODO: use dynamic memory allocation (podarray or std::vector)
+  cl_char dev_name2[1024];
+  cl_char dev_name3[1024];
   
-  cl_device_type      device_type = 0;
-  cl_uint             device_bits = 0;
-  cl_device_fp_config device_fp64 = 0;
+  dev_name1[0] = cl_char(0);
+  dev_name2[0] = cl_char(0);
+  dev_name3[0] = cl_char(0);
   
-  cl_char vendor_name[1024]; // TODO: use dynamic memory allocation (podarray or std::vector)
-  cl_char device_name[1024];
-  cl_char device_vstr[1024];  // vstr = version string
+  cl_device_type      dev_type = 0;
+  cl_device_fp_config dev_fp64 = 0;
   
-  vendor_name[0] = cl_char(0);
-  device_name[0] = cl_char(0);
-  
-  cl_uint tmp_align   = 0;
-  cl_uint tmp_n_units = 0;
-
-  clGetDeviceInfo(device_id, CL_DEVICE_VENDOR,              sizeof(vendor_name),         &vendor_name, NULL);
-  clGetDeviceInfo(device_id, CL_DEVICE_NAME,                sizeof(device_name),         &device_name, NULL);
-  clGetDeviceInfo(device_id, CL_DEVICE_VERSION,             sizeof(device_vstr),         &device_vstr, NULL);
-  clGetDeviceInfo(device_id, CL_DEVICE_TYPE,                sizeof(cl_device_type),      &device_type, NULL);
-  clGetDeviceInfo(device_id, CL_DEVICE_ADDRESS_BITS,        sizeof(cl_uint),             &device_bits, NULL);
-  clGetDeviceInfo(device_id, CL_DEVICE_DOUBLE_FP_CONFIG,    sizeof(cl_device_fp_config), &device_fp64, NULL);
-  clGetDeviceInfo(device_id, CL_DEVICE_MEM_BASE_ADDR_ALIGN, sizeof(cl_uint),             &tmp_align,   NULL);
-  clGetDeviceInfo(device_id, CL_DEVICE_MAX_COMPUTE_UNITS,   sizeof(cl_uint),             &tmp_n_units, NULL);
-  
-  (*this).device_64bit_float = (device_fp64 != 0);
-  (*this).n_units            = uword(tmp_n_units);  // TODO: add sanity check to ensure n_units >= 1
+  cl_uint dev_n_units     = 0;
+  cl_uint dev_sizet_width = 0;
+  cl_uint dev_ptr_width   = 0;
+  cl_uint dev_opencl_ver  = 0;
+  cl_uint dev_align       = 0;
   
   
-  
-  
-  if(print_details)
-    {
-    get_stream_err1() << "coot_rt::interrogate_device():" << std::endl;
-    
-    if(device_type != CL_DEVICE_TYPE_GPU)
-      {
-      get_stream_err1() << "WARNING: device is not a GPU" << std::endl;
-      }
-    
-    get_stream_err1() << "        vendor: " << vendor_name << std::endl;
-    get_stream_err1() << "        device: " << device_name << std::endl;
-    get_stream_err1() << "version string: " << device_vstr << std::endl;
-    get_stream_err1() << "          bits: " << device_bits << std::endl;
-    get_stream_err1() << "          fp64: " << ( (device_fp64 != 0) ? "yes" : "no" ) << std::endl;
-    get_stream_err1() << "         align: " << tmp_align   << std::endl;
-    get_stream_err1() << "       n_units: " << tmp_n_units << std::endl;
-    }
+  clGetDeviceInfo(dev_id, CL_DEVICE_VENDOR,              sizeof(dev_name1),           &dev_name1,   NULL);
+  clGetDeviceInfo(dev_id, CL_DEVICE_NAME,                sizeof(dev_name2),           &dev_name2,   NULL);
+  clGetDeviceInfo(dev_id, CL_DEVICE_VERSION,             sizeof(dev_name3),           &dev_name3,   NULL);
+  clGetDeviceInfo(dev_id, CL_DEVICE_TYPE,                sizeof(cl_device_type),      &dev_type,    NULL);
+  clGetDeviceInfo(dev_id, CL_DEVICE_DOUBLE_FP_CONFIG,    sizeof(cl_device_fp_config), &dev_fp64,    NULL);
+  clGetDeviceInfo(dev_id, CL_DEVICE_MAX_COMPUTE_UNITS,   sizeof(cl_uint),             &dev_n_units, NULL);
+  clGetDeviceInfo(dev_id, CL_DEVICE_MEM_BASE_ADDR_ALIGN, sizeof(cl_uint),             &dev_align,   NULL);
   
   // contrary to the official OpenCL specification (OpenCL 1.2, sec 4.2 and sec 6.1.1).
-  // certain OpenCL implementations use internal size_t which doesn't corresond to CL_DEVICE_ADDRESS_BITS
+  // certain OpenCL implementations use internal size_t which doesn't correspond to CL_DEVICE_ADDRESS_BITS
   // example: Clover from Mesa 13.0.4, running as AMD OLAND (DRM 2.48.0 / 4.9.14-200.fc25.x86_64, LLVM 3.9.1)
   
+
   const char* tmp_program_src = \
     "__kernel void coot_interrogate(__global uint* out) \n"
     "  {                                                \n"
@@ -427,66 +392,61 @@ coot_rt_t::interrogate_device(const bool print_details)
     "    }                                              \n"
     "  }                                                \n";
   
-  bool found_width = false;
+  cl_context       tmp_context    = NULL;
+  cl_command_queue tmp_queue      = NULL;
+  cl_program       tmp_program    = NULL;
+  cl_kernel        tmp_kernel     = NULL;
+  cl_mem           tmp_dev_mem    = NULL;
+  cl_uint          tmp_cpu_mem[4] = { 0, 0, 0, 0 };
   
-  cl_program tmp_program     = NULL;
-  cl_kernel  tmp_kernel      = NULL;
-  cl_mem     tmp_dev_mem     = NULL;
-  cl_uint    tmp_host_mem[4] = { 0, 0, 0, 0 };
   
   cl_int status = 0;
   
-  tmp_program = clCreateProgramWithSource(context, 1, (const char **)&(tmp_program_src), NULL, &status);
+  cl_context_properties tmp_prop[3] = { CL_CONTEXT_PLATFORM, cl_context_properties(plat_id), 0 };
+  
+  tmp_context = clCreateContext(tmp_prop, 1, &dev_id, NULL, NULL, &status);
   
   if(status == CL_SUCCESS)
     {
-    status = clBuildProgram(tmp_program, 0, NULL, NULL, NULL, NULL);
+    // NOTE: clCreateCommandQueue is deprecated as of OpenCL 2.0, but it will be supported for the "foreseeable future"
+    // NOTE: clCreateCommandQueue is replaced with clCreateCommandQueueWithProperties in OpenCL 2.0
+    // NOTE: http://stackoverflow.com/questions/28500496/opencl-function-found-deprecated-by-visual-studio
+    
+    tmp_queue = clCreateCommandQueue(tmp_context, dev_id, 0, &status);
     
     if(status == CL_SUCCESS)
       {
-      status = 0;
-      tmp_kernel = clCreateKernel(tmp_program, "coot_interrogate", &status);
+      tmp_program = clCreateProgramWithSource(tmp_context, 1, (const char **)&(tmp_program_src), NULL, &status);
       
       if(status == CL_SUCCESS)
         {
-        status = 0;
-        tmp_dev_mem = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(cl_uint)*4, NULL, &status);
-        
-        status = 0;
-        clSetKernelArg(tmp_kernel, 0, sizeof(cl_mem),  &tmp_dev_mem);
-        status = clEnqueueTask(cq, tmp_kernel, 0, NULL, NULL);  // TODO: replace with clEnqueueNDRangeKernel to avoid deprecation warnings
+        status = clBuildProgram(tmp_program, 0, NULL, NULL, NULL, NULL);
         
         if(status == CL_SUCCESS)
           {
-          clFinish(cq);
-          
-          status = clEnqueueReadBuffer(cq, tmp_dev_mem, CL_TRUE, 0, sizeof(cl_uint)*4, tmp_host_mem, 0, NULL, NULL);
+          tmp_kernel = clCreateKernel(tmp_program, "coot_interrogate", &status);
           
           if(status == CL_SUCCESS)
             {
-            clFinish(cq);
+            tmp_dev_mem = clCreateBuffer(tmp_context, CL_MEM_READ_WRITE, sizeof(cl_uint)*4, NULL, &status);
             
-            if(print_details)
+            clSetKernelArg(tmp_kernel, 0, sizeof(cl_mem),  &tmp_dev_mem);
+            status = clEnqueueTask(tmp_queue, tmp_kernel, 0, NULL, NULL);  // TODO: replace with clEnqueueNDRangeKernel to avoid deprecation warnings
+            
+            if(status == CL_SUCCESS)
               {
-              get_stream_err1() << "sizeof(size_t): " << tmp_host_mem[0] << std::endl;
-              get_stream_err1() << " sizeof(void*): " << tmp_host_mem[1] << std::endl;
-              get_stream_err1() << "OPENCL_VERSION: " << tmp_host_mem[2] << std::endl;
-              }
-            
-            const cl_uint device_sizet_width = tmp_host_mem[0];
-            const cl_uint device_opencl_ver  = tmp_host_mem[2];
-            
-            if( (device_sizet_width == 4) || (device_sizet_width == 8) )
-              {
-              found_width = true;
-              if(device_sizet_width == 8)  { (*this).device_64bit_sizet = true; }
-              }
-            
-            // TODO: for paranoia, check consistency with the version extracted from the version string (CL_DEVICE_VERSION)
-            
-            if(device_opencl_ver < 120)
-              {
-              coot_warn("device has OpenCL version lower than 1.2");
+              clFinish(cq);
+              
+              status = clEnqueueReadBuffer(tmp_queue, tmp_dev_mem, CL_TRUE, 0, sizeof(cl_uint)*4, tmp_cpu_mem, 0, NULL, NULL);
+              
+              if(status == CL_SUCCESS)
+                {
+                clFinish(cq);
+                
+                dev_sizet_width = tmp_cpu_mem[0];
+                dev_ptr_width   = tmp_cpu_mem[1];
+                dev_opencl_ver  = tmp_cpu_mem[2];
+                }
               }
             }
           }
@@ -494,13 +454,40 @@ coot_rt_t::interrogate_device(const bool print_details)
       }
     }
   
-  if(found_width == false)  { coot_warn("coot_rt: size_t has unsupported width; using 32 bit word"); }
+  if(status != CL_SUCCESS)
+    {
+    coot_debug_warn(coot_cl_error::as_string(status));
+    }
   
-  if(tmp_dev_mem != NULL)  { clReleaseMemObject(tmp_dev_mem); }
-  if(tmp_kernel  != NULL)  { clReleaseKernel(tmp_kernel);        }
-  if(tmp_program != NULL)  { clReleaseProgram(tmp_program);      }
+  if(tmp_dev_mem != NULL)  { clReleaseMemObject   (tmp_dev_mem); }
+  if(tmp_kernel  != NULL)  { clReleaseKernel      (tmp_kernel ); }
+  if(tmp_program != NULL)  { clReleaseProgram     (tmp_program); }
+  if(tmp_queue   != NULL)  { clReleaseCommandQueue(tmp_queue);   }
+  if(tmp_context != NULL)  { clReleaseContext     (tmp_context); }
   
-  return found_width;
+  if(print_info)
+    {
+    get_stream_err1().flush();
+    get_stream_err1() << "name1:       " << dev_name1 << std::endl;
+    get_stream_err1() << "name2:       " << dev_name2 << std::endl;
+    get_stream_err1() << "name3:       " << dev_name3 << std::endl;
+    get_stream_err1() << "is_gpu:      " << (dev_type == CL_DEVICE_TYPE_GPU)  << std::endl;
+    get_stream_err1() << "fp64:        " << dev_fp64 << std::endl;
+    get_stream_err1() << "sizet_width: " << dev_sizet_width  << std::endl;
+    get_stream_err1() << "ptr_width:   " << dev_ptr_width << std::endl;
+    get_stream_err1() << "n_units:     " << dev_n_units << std::endl;
+    get_stream_err1() << "opencl_ver:  " << dev_opencl_ver << std::endl;
+  //get_stream_err1() << "align:       " << dev_align  << std::endl;
+    }
+  
+  out_info.is_gpu      = (dev_type == CL_DEVICE_TYPE_GPU);
+  out_info.has_float64 = (dev_fp64 != 0);
+  out_info.has_sizet64 = (dev_sizet_width >= 8);
+  out_info.ptr_width   = uword(dev_ptr_width);
+  out_info.n_units     = uword(dev_n_units);
+  out_info.opencl_ver  = uword(dev_opencl_ver);
+  
+  return (status == CL_SUCCESS);
   }
 
 
@@ -625,7 +612,7 @@ coot_rt_t::init_kernels(std::vector<cl_kernel>& kernels, const std::string& sour
     }
   
   
-  build_options += ((sizeof(uword) >= 8) && device_64bit_sizet) ? "-D UWORD=ulong" : "-D UWORD=uint";
+  build_options += ((sizeof(uword) >= 8) && dev_info.has_sizet64) ? "-D UWORD=ulong" : "-D UWORD=uint";
     
   status = clBuildProgram(prog_holder.prog, 0, NULL, build_options.c_str(), NULL, NULL);
   
@@ -674,7 +661,7 @@ inline
 uword
 coot_rt_t::get_n_units() const
   {
-  return (valid) ? n_units : uword(0);
+  return (valid) ? dev_info.n_units : uword(0);
   }
 
 
@@ -690,18 +677,18 @@ coot_rt_t::is_valid() const
 
 inline
 bool
-coot_rt_t::has_64bit_sizet() const
+coot_rt_t::has_sizet64() const
   {
-  return device_64bit_sizet;
+  return dev_info.has_sizet64;
   }
 
 
 
 inline
 bool
-coot_rt_t::has_64bit_float() const
+coot_rt_t::has_float64() const
   {
-  return device_64bit_float;
+  return dev_info.has_float64;
   }
 
 
@@ -817,11 +804,11 @@ coot_rt_t::program_wrapper::~program_wrapper()
   {
   coot_extra_debug_sigprint();
   
-  if(prog != NULL)
-    {
-    clReleaseProgram(prog);
-    }
+  if(prog != NULL)  { clReleaseProgram(prog); }
   }
+
+
+
 
 
 
@@ -870,7 +857,7 @@ coot_rt_t::cq_guard::~cq_guard()
 inline
 coot_rt_t::adapt_uword::adapt_uword(const uword val)
   {
-  if((sizeof(uword) >= 8) && coot_rt.has_64bit_sizet())
+  if((sizeof(uword) >= 8) && coot_rt.has_sizet64())
     {
     size  = sizeof(u64);
     addr  = (void*)(&val64);

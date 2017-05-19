@@ -14,22 +14,46 @@
 
 
 
+struct coot_rt_dev_info
+  {
+  public:
+  
+  coot_aligned bool  is_gpu;
+  coot_aligned bool  has_float64;
+  coot_aligned bool  has_sizet64;
+  coot_aligned uword ptr_width;
+  coot_aligned uword n_units;
+  coot_aligned uword opencl_ver;
+  
+  inline
+  void
+  reset()
+    {
+    is_gpu      = false;
+    has_float64 = false;
+    has_sizet64 = false;
+    n_units     = 0;
+    ptr_width   = 0;
+    opencl_ver  = 0;
+    }
+  
+  inline coot_rt_dev_info()  { reset(); }
+  };
+
+
+
 // TODO: if this is placed into a run-time library and executed there, what happens when two programs use the run-time library at the same time?
 class coot_rt_t
   {
   private:
   
+  coot_aligned bool             valid;
+  coot_aligned coot_rt_dev_info dev_info;
+  
   coot_aligned cl_platform_id   platform_id;
   coot_aligned cl_device_id     device_id;
   coot_aligned cl_context       context;
   coot_aligned cl_command_queue cq;
-  coot_aligned uword            n_units;
-  
-  // cl_platform_id   is typedef for struct _cl_platform_id*
-  // cl_device_id     is typedef for struct _cl_device_id*
-  // cl_context       is typedef for struct _cl_context*
-  // cl_command_queue is typedef for struct _cl_command_queue*
-  // cl_kernel        is typedef for struct _cl_kernel*
   
   coot_aligned std::vector<cl_kernel>  u32_kernels;
   coot_aligned std::vector<cl_kernel>  s32_kernels;
@@ -40,10 +64,6 @@ class coot_rt_t
   coot_aligned std::vector<cl_kernel> cx_f_kernels;
   coot_aligned std::vector<cl_kernel> cx_d_kernels;
   
-  coot_aligned bool valid;
-  coot_aligned bool device_64bit_sizet;
-  coot_aligned bool device_64bit_float;
-  
   #if defined(COOT_USE_CXX11)
   coot_aligned std::recursive_mutex mutex;
   #endif
@@ -51,20 +71,25 @@ class coot_rt_t
   inline void   lock();  //! NOTE: do not call this function directly; instead instantiate the cq_guard class inside a relevant scope
   inline void unlock();  //! NOTE: do not call this function directly; it's automatically called when an instance of cq_guard goes out of scope
   
-  inline void cleanup_cl();
+  inline void internal_cleanup();
+  inline bool internal_init(const bool manual_selection, const uword wanted_platform_id, const uword wanted_device_id, const bool print_info);
   
-  inline bool init_cl(std::string& out_errmsg, const bool manual_selection = false, const uword wanted_platform_id = 0, const uword wanted_device_id = 0);
+  inline bool find_device(const bool manual_selection, const uword wanted_platform_id, const uword wanted_device_id, const bool print_info);
   
-  inline bool interrogate_device(const bool print_details);
+  inline bool interrogate_device(coot_rt_dev_info& out_info, cl_platform_id plat_id, cl_device_id dev_id, const bool print_info) const;
   
   template<typename eT>
   inline bool init_kernels(std::vector<cl_kernel>& kernels, const std::string& source, const std::vector<std::string>& names);
+  
   
   
   public:
   
   inline ~coot_rt_t();
   inline  coot_rt_t();
+  
+  inline bool init(const bool print_info = false);
+  inline bool init(const uword wanted_platform_id, const uword wanted_device_id, const bool print_info = false);
   
   #if defined(COOT_USE_CXX11)
                    coot_rt_t(const coot_rt_t&) = delete;
@@ -73,9 +98,9 @@ class coot_rt_t
   
   inline uword get_n_units() const;
   
-  inline bool is_valid()        const;
-  inline bool has_64bit_sizet() const;
-  inline bool has_64bit_float() const;
+  inline bool is_valid()    const;
+  inline bool has_sizet64() const;
+  inline bool has_float64() const;
   
   template<typename eT>
   inline cl_mem acquire_memory(const uword n_elem);
