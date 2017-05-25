@@ -38,7 +38,7 @@ inline std::string generate_kernel(T1& t)
       "__kernel void COOT_FN(PREFIX,elem_" + name + ")(__global eT* out, __global const eT* A, const uword N)\n"
       "  {\n"
       "  const UWORD i = get_global_id(0);\n"
-      "  if (i < N) { out[i] = " + operation + ";\n"
+      "  if (i < N) { out[i] = " + operation + "; }\n"
       "  }\n";
 
   return kernel;
