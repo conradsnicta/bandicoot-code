@@ -9,7 +9,7 @@ main(int argc, char** argv)
   {
   cout << coot::coot_version::as_string() << endl;
   
-  if(argc < 4)
+  if(argc < 3)
     {
     cout << "usage: " << argv[0] << " nrows ncols" << endl;
     return -1;
@@ -26,7 +26,17 @@ main(int argc, char** argv)
 
   std::string kernel = generate_kernel(-A);
 
-  std::cout << "Kernel:\n" << kernel;
-  
+  std::cout << "Kernel:\n\n" << kernel;
+
+  kernel = generate_kernel(-(-A));
+
+  std::cout << "\n\nKernel for -(-A):\n\n" << kernel;
+
+  kernel = generate_kernel(-(sqrt(-A)));
+
+  std::cout << "\n\nKernel for -(sqrt(-A)):\n\n" << kernel;
+
+  // Later we will actually run the kernel...
+
   return 0;
   }
