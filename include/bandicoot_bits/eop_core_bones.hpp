@@ -83,6 +83,22 @@ class eop_exp               : public eop_core<eop_exp>               {};
 // class eop_erfc              : public eop_core<eop_erfc>              {};
 // class eop_lgamma            : public eop_core<eop_lgamma>            {};
 
+template<typename T> inline std::string eop_name() { return "unknown"; }
+
+template<> inline std::string eop_name<eop_scalar_plus>() { return "plus"; }
+template<> inline std::string eop_name<eop_neg>() { return "neg"; }
+template<> inline std::string eop_name<eop_scalar_minus_pre>() { return "minus_pre"; }
+template<> inline std::string eop_name<eop_scalar_minus_post>() { return "minus_post"; }
+template<> inline std::string eop_name<eop_scalar_times>() { return "times"; }
+template<> inline std::string eop_name<eop_scalar_div_pre>() { return "div_pre"; }
+template<> inline std::string eop_name<eop_scalar_div_post>() { return "div_post"; }
+template<> inline std::string eop_name<eop_square>() { return "square"; }
+template<> inline std::string eop_name<eop_sqrt>() { return "sqrt"; }
+
+template<typename T> inline std::string eop_op() { return "unknown"; }
+
+template<> inline std::string eop_op<eop_sqrt>() { return "sqrt"; }
+template<> inline std::string eop_op<eop_neg>() { return "-"; }
 
 
 //! @}

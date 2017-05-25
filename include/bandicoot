@@ -200,6 +200,8 @@ namespace coot
   #include "bandicoot_bits/glue_times_meat.hpp"
   
   #include "bandicoot_bits/wall_clock_meat.hpp"
+
+  #include "bandicoot_bits/generate_kernel.hpp"
   }
 
 
