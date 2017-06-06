@@ -575,7 +575,54 @@ coot_rt_t::init_kernels(std::vector<cl_kernel>& kernels, const std::string& sour
   
   std::string build_options;
   std::string prefix;
+  get_build_options<eT>(prefix, build_options);
   
+  status = clBuildProgram(prog_holder.prog, 0, NULL, build_options.c_str(), NULL, NULL);
+  
+  if(status != CL_SUCCESS)
+    {
+    cout << "status: " << coot_cl_error::as_string(status) << endl;
+    
+    size_t len = 0;
+    char buffer[10240];  // TODO: use std::vector<char> or podarray
+
+    clGetProgramBuildInfo(prog_holder.prog, dev_id, CL_PROGRAM_BUILD_LOG, sizeof(buffer), buffer, &len);
+    std::cout << "coot_rt::init_kernels(): couldn't build program;"              << std::endl;
+    std::cout << "coot_rt::init_kernels(): output from clGetProgramBuildInfo():" << std::endl;
+    std::cout << buffer << std::endl;
+    
+    return false;
+    }
+  
+  
+  const uword n_kernels = names.size();
+  
+  kernels.resize(n_kernels);
+  
+  for(uword i=0; i < n_kernels; ++i)
+    {
+    status = 0;
+    
+    const std::string kernel_name = prefix + names.at(i);
+    
+    kernels.at(i) = clCreateKernel(prog_holder.prog, kernel_name.c_str(), &status);
+    
+    if((status != CL_SUCCESS) || (kernels[i] == NULL))
+      {
+      std::cout << coot_cl_error::as_string(status) << endl;
+      std::cout << "kernel_name: " << kernel_name << endl;
+      return false;
+      }
+    }
+  
+  return true;
+  }
+
+
+
+template<typename eT>
+inline void coot_rt_t::get_build_options(std::string& prefix, std::string& build_options)
+  {
   if(is_same_type<eT, u32>::yes)
     {
     prefix = "u32_";
@@ -653,49 +700,8 @@ coot_rt_t::init_kernels(std::vector<cl_kernel>& kernels, const std::string& sour
     build_options += "-D promoted_eT=double";
     build_options += " ";
     }
-  
-  
-  build_options += ((sizeof(uword) >= 8) && dev_info.has_sizet64) ? "-D UWORD=ulong" : "-D UWORD=uint";
-    
-  status = clBuildProgram(prog_holder.prog, 0, NULL, build_options.c_str(), NULL, NULL);
-  
-  if(status != CL_SUCCESS)
-    {
-    cout << "status: " << coot_cl_error::as_string(status) << endl;
-    
-    size_t len = 0;
-    char buffer[10240];  // TODO: use std::vector<char> or podarray
 
-    clGetProgramBuildInfo(prog_holder.prog, dev_id, CL_PROGRAM_BUILD_LOG, sizeof(buffer), buffer, &len);
-    std::cout << "coot_rt::init_kernels(): couldn't build program;"              << std::endl;
-    std::cout << "coot_rt::init_kernels(): output from clGetProgramBuildInfo():" << std::endl;
-    std::cout << buffer << std::endl;
-    
-    return false;
-    }
-  
-  
-  const uword n_kernels = names.size();
-  
-  kernels.resize(n_kernels);
-  
-  for(uword i=0; i < n_kernels; ++i)
-    {
-    status = 0;
-    
-    const std::string kernel_name = prefix + names.at(i);
-    
-    kernels.at(i) = clCreateKernel(prog_holder.prog, kernel_name.c_str(), &status);
-    
-    if((status != CL_SUCCESS) || (kernels[i] == NULL))
-      {
-      std::cout << coot_cl_error::as_string(status) << endl;
-      std::cout << "kernel_name: " << kernel_name << endl;
-      return false;
-      }
-    }
-  
-  return true;
+  build_options += ((sizeof(uword) >= 8) && dev_info.has_sizet64) ? "-D UWORD=ulong" : "-D UWORD=uint";
   }
 
 
@@ -818,6 +824,63 @@ coot_rt_t::get_kernel(const kernel_id::enum_id num)
   else if(is_same_type<eT,float >::yes)  { return   f_kernels.at(num); }
   else if(is_same_type<eT,double>::yes)  { return   d_kernels.at(num); }
   else { coot_debug_check(true, "unsupported element type" ); }
+  }
+
+
+
+template<typename eT>
+inline
+cl_kernel
+coot_rt_t::build_kernel(const std::string& name, const std::string& source)
+  {
+  coot_extra_debug_sigprint();
+
+  coot_debug_check( (valid == false), "coot_rt not valid" );
+
+  program_wrapper prog_holder;
+
+  cl_int status = 0;
+  const char* src = source.c_str();
+  prog_holder.prog = clCreateProgramWithSource(ctxt, 1, &src, NULL, &status);
+
+  if ((status != CL_SUCCESS) || (prog_holder.prog == NULL))
+    {
+    std::cout << "status: " << coot_cl_error::as_string(status) << std::endl;
+    std::cout << "couldn't build program" << std::endl;
+    return NULL;
+    }
+
+  std::string prefix, build_options;
+  get_build_options<eT>(prefix, build_options);
+
+  status = clBuildProgram(prog_holder.prog, 0, NULL, build_options.c_str(),
+      NULL, NULL);
+
+  if (status != CL_SUCCESS)
+    {
+    std::cout << "status: " << coot_cl_error::as_string(status) << std::endl;
+
+    size_t len = 0;
+    char buffer[10240];
+
+    clGetProgramBuildInfo(prog_holder.prog, dev_id, CL_PROGRAM_BUILD_LOG,
+        sizeof(buffer), buffer, &len);
+
+    std::cout << "couldn't build program; output:" << std::endl;
+    std::cout << buffer << std::endl;
+    return NULL;
+    }
+
+  const std::string full_name = prefix + name;
+  cl_kernel k = clCreateKernel(prog_holder.prog, full_name.c_str(), &status);
+
+  if ((status != CL_SUCCESS) || (k == NULL))
+    {
+    std::cout << coot_cl_error::as_string(status) << std::endl;
+    return NULL;
+    }
+
+  return k;
   }
 
 

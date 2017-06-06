@@ -84,7 +84,7 @@ class coot_rt_t
   template<typename eT>
   inline bool init_kernels(std::vector<cl_kernel>& kernels, const std::string& source, const std::vector<std::string>& names);
   
-  
+  template<typename eT> inline void get_build_options(std::string& prefix, std::string& build_options);
   
   public:
   
@@ -116,6 +116,10 @@ class coot_rt_t
   // TODO: add function to return info about device as a string
   
   template<typename eT> inline cl_kernel get_kernel(const kernel_id::enum_id num);
+
+  // Build a kernel from the given string representing the code.
+  template<typename eT>
+  cl_kernel build_kernel(const std::string& name, const std::string& source);
   
   class program_wrapper;
   class cq_guard;
