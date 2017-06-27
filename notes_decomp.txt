@@ -1,0 +1,21 @@
+decompositions + etc used by mlpack as of 27 jun 2017
+omitting test directory
+
+chol        11
+eig_sym      7
+eig_gen      0
+eig_pair     0
+inv & .i()   4
+inv_sympd    0
+lu           4
+null         0
+orth         0
+pinv         2
+qr           3 
+qr_econ      5
+qz           0
+schur        0
+solve       15
+svd          8
+svd_econ     6
+syl          1

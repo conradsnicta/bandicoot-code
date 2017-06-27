@@ -1,0 +1,52 @@
+DGESV computes the solution to system of linear equations for GE matrices
+
+DGETRS solves a system of linear equations using the LU factorization computed by DGETRF.
+DGETRF computes an LU factorization
+
+DTRSV  solves system of equations with a triangular matrix
+DTRSM  solves matrix equations with a triangular matrix
+
+DPOTRF computes the Cholesky factorization of a real symmetric positive definite matrix
+DPOTRI inverse of symmetric positive definite matrix using the Cholesky factorization computed by DPOTRF
+
+DTRTRI computes the inverse of a triangular matrix
+DLAUUM computes the product U * U**T or L**T * L, where U or L = triangular
+            
+DSYEVD computes eigenvalues and eigenvectors using divide and conquer algorithm
+
+            
+magma_dgesv()            4254
+- magma_dgetrf2_gpu()   10505
+- magma_dgetrs_gpu()     5053
+- magma_dgetrf()        12310
+
+magma_dgetrf2_gpu() 10505
+- TODO
+
+magma_dgetrs_gpu()   5053
+- magma_dtrsv()      redirects to clblasDtrsv
+- magma_dtrsm()      redirects to clblasDtrsm
+
+magma_dgetrf()       12310
+- magma_dtrsm()      redirects to clblasDtrsm
+- magma_dgemm()      redirects to clBLAS
+
+
+
+magma_dpotri_gpu()    2632
+- magma_dtrtri_gpu()  7797
+- magma_dlauum_gpu()  5690
+
+magma_dpotrf() 8809
+- magma_dsyrk()      redirects to clBLAS ?
+- magma_dtrsm()      redirects to clblasDtrsm
+
+
+
+dsyevd.cpp   
+magma_dsyevd()    10532
+- bunch of lapack functions
+- magma_dsqrt()  - scalar function?
+- magma_dsytrd()  11121
+- magma_dstedx()  11243
+- magma_dormtr()   6110
