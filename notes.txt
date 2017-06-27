@@ -1,3 +1,9 @@
+two use cases:
+(1) as a dedicated library for GPU matrix programming with a subset of Armadillo-like functions.
+(2) as a drop-in accelerator for the Armadillo library, offloading intensive computations to the GPU when possible
+
+
+
 TODO
 
 investigate use of clBLAS axpy() for simple addition and subtraction of arrays
@@ -114,14 +120,14 @@ trans() -> requires Op
 .index_max()
 
 as_scalar() [done]
-accu()      [done]
+accu()      [done]  TODO: performance issues
 trace()     [done]
 
-sum(X,dim) [done]
+sum(X,dim) [done]   TODO: performance issues
 min(X,dim)
 max(X,dim)
 
-dot(A,B)  -> how to implement this efficiently?
+dot(A,B)  -> TODO: use clBLAS gemv() workaround
 
 .zeros() [done]
 .ones()  [done]
