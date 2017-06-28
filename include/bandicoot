@@ -16,6 +16,8 @@
 #ifndef BANDICOOT_INCLUDES
 #define BANDICOOT_INCLUDES
 
+#include <cassert>  // TODO: remove this after all of the code has been adapted
+
 #include <armadillo>
 
 #if (ARMA_VERSION_MAJOR < 7)
@@ -168,6 +170,7 @@ namespace coot
   #include "bandicoot_bits/fn_sum.hpp"
   #include "bandicoot_bits/fn_trans.hpp"
   #include "bandicoot_bits/fn_strans.hpp"
+  #include "bandicoot_bits/fn_chol.hpp"
   
   
   //
