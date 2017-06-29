@@ -112,8 +112,12 @@ class coot_rt_t
   
   inline void release_memory(cl_mem dev_mem);
   
+  inline cl_device_id     get_device();
   inline cl_context       get_context();
   inline cl_command_queue get_cq();
+  
+  inline bool create_extra_cq(cl_command_queue& out_queue);
+  inline void delete_extra_cq(cl_command_queue&  in_queue);
   
   // TODO: add function to return info about device as a string
   

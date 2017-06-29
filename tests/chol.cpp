@@ -12,8 +12,9 @@ main()
   coot::coot_rt.init("coot_config.txt", true);
   //coot::coot_rt.init(true);
   //coot::coot_rt.init(2,0);
-    
-  arma::dmat A(5,5, arma::fill::randu); A -= 0.5;
+  
+  const coot::uword N = 200;
+  arma::dmat A(N,N, arma::fill::randu); A -= 0.5;
   A.print("A:");
   
   arma::dmat X = A*A.t();

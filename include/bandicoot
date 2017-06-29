@@ -170,7 +170,8 @@ namespace coot
   #include "bandicoot_bits/fn_sum.hpp"
   #include "bandicoot_bits/fn_trans.hpp"
   #include "bandicoot_bits/fn_strans.hpp"
-  #include "bandicoot_bits/fn_chol.hpp"
+  //#include "bandicoot_bits/fn_chol.hpp"
+  #include "bandicoot_bits/fn_chol2.hpp"
   
   
   //

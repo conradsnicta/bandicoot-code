@@ -835,6 +835,19 @@ coot_rt_t::release_memory(cl_mem dev_mem)
 
 
 inline
+cl_device_id
+coot_rt_t::get_device()
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_check( (valid == false), "coot_rt not valid" );
+  
+  return dev_id;
+  }
+
+
+
+inline
 cl_context
 coot_rt_t::get_context()
   {
@@ -856,6 +869,42 @@ coot_rt_t::get_cq()
   coot_debug_check( (valid == false), "coot_rt not valid" );
   
   return cq;
+  }
+
+
+
+inline
+bool
+coot_rt_t::create_extra_cq(cl_command_queue& out_queue)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_check( (valid == false), "coot_rt not valid" );
+  
+  cl_int status = 0;
+  
+  out_queue = clCreateCommandQueue((*this).ctxt, (*this).dev_id, 0, &status);
+  
+  if((status != CL_SUCCESS) || (out_queue == NULL))
+    {
+    coot_debug_warn(coot_cl_error::as_string(status));
+    return false;
+    }
+  
+  return true;
+  }
+
+
+
+inline
+void
+coot_rt_t::delete_extra_cq(cl_command_queue& in_queue)
+  {
+  coot_extra_debug_sigprint();
+  
+  coot_debug_check( (valid == false), "coot_rt not valid" );
+  
+  if(in_queue != NULL)  { clReleaseCommandQueue(in_queue); in_queue = NULL; }
   }
 
 
