@@ -156,6 +156,14 @@ namespace coot
   #include "bandicoot_bits/operator_div.hpp"
   //#include "bandicoot_bits/operator_ostream.hpp"
   
+  //
+  // magma related
+  
+  //#include "bandicoot_bits/magma13_support.hpp"
+  //#include "bandicoot_bits/magma13_dpotrf.hpp"
+  
+  #include "bandicoot_bits/magma22_support.hpp"
+  #include "bandicoot_bits/magma22_dpotrf.hpp"
   
   //
   // user accessible functions
@@ -170,8 +178,7 @@ namespace coot
   #include "bandicoot_bits/fn_sum.hpp"
   #include "bandicoot_bits/fn_trans.hpp"
   #include "bandicoot_bits/fn_strans.hpp"
-  //#include "bandicoot_bits/fn_chol.hpp"
-  #include "bandicoot_bits/fn_chol2.hpp"
+  #include "bandicoot_bits/fn_chol.hpp"
   
   
   //
