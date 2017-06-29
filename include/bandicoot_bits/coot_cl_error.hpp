@@ -118,24 +118,24 @@ struct coot_clblas_error
       case clblasCompilerNotAvailable: return "cl_compiler_not_available";
       case clblasBuildProgramFailure : return "cl_build_program_failure";
       // extended codes onwards
-      case clblasNotImplemented      : return "Functionality is not implemented";
+      case clblasNotImplemented      : return "functionality is not implemented";
       case clblasNotInitialized      : return "clblas library is not initialized yet";
-      case clblasInvalidMatA         : return "Matrix A is not a valid memory object";
-      case clblasInvalidMatB         : return "Matrix B is not a valid memory object";
-      case clblasInvalidMatC         : return "Matrix C is not a valid memory object";
-      case clblasInvalidVecX         : return "Vector X is not a valid memory object";
-      case clblasInvalidVecY         : return "Vector Y is not a valid memory object";
-      case clblasInvalidDim          : return "An input dimension (M,N,K) is invalid";
-      case clblasInvalidLeadDimA     : return "Leading dimension A must not be less than the size of the first dimension";
-      case clblasInvalidLeadDimB     : return "Leading dimension B must not be less than the size of the second dimension";
-      case clblasInvalidLeadDimC     : return "Leading dimension C must not be less than the size of the third dimension";
-      case clblasInvalidIncX         : return "The increment for a vector X must not be 0";
-      case clblasInvalidIncY         : return "The increment for a vector Y must not be 0";
-      case clblasInsufficientMemMatA : return "The memory object for Matrix A is too small";
-      case clblasInsufficientMemMatB : return "The memory object for Matrix B is too small";
-      case clblasInsufficientMemMatC : return "The memory object for Matrix C is too small";
-      case clblasInsufficientMemVecX : return "The memory object for Vector X is too small";
-      case clblasInsufficientMemVecY : return "The memory object for Vector Y is too small";
+      case clblasInvalidMatA         : return "matrix A is not a valid memory object";
+      case clblasInvalidMatB         : return "matrix B is not a valid memory object";
+      case clblasInvalidMatC         : return "matrix C is not a valid memory object";
+      case clblasInvalidVecX         : return "vector X is not a valid memory object";
+      case clblasInvalidVecY         : return "vector Y is not a valid memory object";
+      case clblasInvalidDim          : return "an input dimension (M,N,K) is invalid";
+      case clblasInvalidLeadDimA     : return "leading dimension A must not be less than the size of the first dimension";
+      case clblasInvalidLeadDimB     : return "leading dimension B must not be less than the size of the second dimension";
+      case clblasInvalidLeadDimC     : return "leading dimension C must not be less than the size of the third dimension";
+      case clblasInvalidIncX         : return "the increment for a vector X must not be 0";
+      case clblasInvalidIncY         : return "the increment for a vector Y must not be 0";
+      case clblasInsufficientMemMatA : return "the memory object for Matrix A is too small";
+      case clblasInsufficientMemMatB : return "the memory object for Matrix B is too small";
+      case clblasInsufficientMemMatC : return "the memory object for Matrix C is too small";
+      case clblasInsufficientMemVecX : return "the memory object for Vector X is too small";
+      case clblasInsufficientMemVecY : return "the memory object for Vector Y is too small";
       default:                         return "unknown clBLAS error code";
       }
     }
