@@ -130,15 +130,6 @@ magma_event_t  *g_event;
 
 inline
 magma_int_t
-magma_get_dpotrf_nb( magma_int_t m )
-  {
-  if      (m <= 4256) return 128;
-  else                return 256;
-  }
-
-
-inline
-magma_int_t
 magma_malloc_cpu( void** ptrPtr, size_t size )
   {
   // malloc and free sometimes don't work for size=0, so allocate some minimal size

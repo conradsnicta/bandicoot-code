@@ -89,6 +89,14 @@ check_error(const cl_int error_code)
 #define MagmaLowerStr         "Lower"
 #define MagmaFullStr          "Full"
 
+#define MagmaNonUnitStr       "NonUnit"
+#define MagmaUnitStr          "Unit"
+
+#define MagmaForwardStr       "Forward"
+#define MagmaBackwardStr      "Backward"
+
+#define MagmaColumnwiseStr    "Columnwise"
+#define MagmaRowwiseStr       "Rowwise"
 
 typedef enum {
     MagmaUpper         = 121,
@@ -116,6 +124,16 @@ typedef enum {
     MagmaNonUnit       = 131,
     MagmaUnit          = 132
 } magma_diag_t;
+
+typedef enum {
+    MagmaForward       = 391,  /* larfb */
+    MagmaBackward      = 392
+} magma_direct_t;
+
+typedef enum {
+    MagmaColumnwise    = 401,  /* larfb */
+    MagmaRowwise       = 402
+} magma_storev_t;
 
 typedef int magma_int_t;
 
@@ -685,6 +703,32 @@ magma_dtrsm
   check_error( err );
   }
 
+
+inline
+void
+magma_dtrmm(
+    magma_side_t side, magma_uplo_t uplo, magma_trans_t trans, magma_diag_t diag,
+    magma_int_t m, magma_int_t n,
+    double alpha,
+    magmaDouble_const_ptr dA, size_t dA_offset, magma_int_t ldda,
+    magmaDouble_ptr       dB, size_t dB_offset, magma_int_t lddb,
+    magma_queue_t queue )
+{
+    if (m <= 0 || n <= 0)  { return; }
+
+    cl_int err = clblasDtrmm(
+        clblasColumnMajor,
+        clblas_side_const( side ),
+        clblas_uplo_const( uplo ),
+        clblas_trans_const( trans ),
+        clblas_diag_const( diag ),
+        m, n,
+        alpha, dA, dA_offset, ldda,
+               dB, dB_offset, lddb,
+        1, &queue, 0, NULL, g_event );
+    clFlush(queue);
+    check_error( err );
+}
 
 
 ////////////////////////////////////////

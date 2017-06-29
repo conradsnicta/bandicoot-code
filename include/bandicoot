@@ -132,6 +132,8 @@ namespace coot
   
   #include "bandicoot_bits/coot_cmath.hpp"
   
+  // definitions for LAPACK functions
+  #include "bandicoot_bits/def_lapack.hpp"
   
   //
   // runtime
@@ -163,6 +165,11 @@ namespace coot
   //#include "bandicoot_bits/magma13_dpotrf.hpp"
   
   #include "bandicoot_bits/magma22_support.hpp"
+  
+  #include "bandicoot_bits/magma22_dlarfb.hpp"
+  #include "bandicoot_bits/magma22_dgeqrf.hpp"
+  
+  
   #include "bandicoot_bits/magma22_dpotrf.hpp"
   
   //

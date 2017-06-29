@@ -50,6 +50,8 @@
   #define coot_fortran2_prefix(function)   wrapper_##function
 #endif
 
+// TODO: do we still want to go through a wrapper library?
+
 #if defined(COOT_USE_WRAPPER)
   #define coot_fortran(function) coot_fortran2_prefix(function)
   #define coot_wrapper(function) wrapper_##function

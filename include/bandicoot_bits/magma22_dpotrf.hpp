@@ -118,8 +118,8 @@ magma_dpotrf_gpu(
         std::cout << "using CPU version" << std::endl;
         /* Use unblocked code. */
         magma_dgetmatrix( n, n, dA(0,0), ldda, work, n, queues[0] );
-                 //lapackf77_dpotrf( uplo_, &n, work, &n, info );
-        arma::lapack::potrf<double>( (char*)uplo_, &n, work, &n, info );
+               //lapackf77_dpotrf( uplo_, &n, work, &n, info );
+        coot_fortran(coot_dpotrf)( uplo_, &n, work, &n, info );
         magma_dsetmatrix( n, n, work, n, dA(0,0), ldda, queues[0] );
     }
     else {
@@ -157,8 +157,8 @@ magma_dpotrf_gpu(
                 // simultaneous with above dgemm, transfer diagonal block,
                 // factor it on CPU, and test for positive definiteness
                 magma_queue_sync( queues[0] );
-                         //lapackf77_dpotrf( MagmaUpperStr, &jb, work, &jb, info );
-                arma::lapack::potrf<double>( (char*)MagmaUpperStr, &jb, work, &jb, info );
+                       //lapackf77_dpotrf( MagmaUpperStr, &jb, work, &jb, info );
+                coot_fortran(coot_dpotrf)( MagmaUpperStr, &jb, work, &jb, info );
                 
                 magma_dsetmatrix_async( jb, jb,
                                         work,     jb,
@@ -208,8 +208,8 @@ magma_dpotrf_gpu(
                 // simultaneous with above dgemm, transfer diagonal block,
                 // factor it on CPU, and test for positive definiteness
                 magma_queue_sync( queues[0] );
-                         //lapackf77_dpotrf( MagmaLowerStr, &jb, work, &jb, info );
-                arma::lapack::potrf<double>( (char*)MagmaLowerStr, &jb, work, &jb, info );
+                       //lapackf77_dpotrf( MagmaLowerStr, &jb, work, &jb, info );
+                coot_fortran(coot_dpotrf)( MagmaLowerStr, &jb, work, &jb, info );
                 magma_dsetmatrix_async( jb, jb,
                                         work,     jb,
                                         dA(j, j), ldda, queues[1] );
