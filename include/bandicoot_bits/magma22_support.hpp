@@ -181,6 +181,7 @@ magma_malloc_cpu( void** ptrPtr, size_t size )
 
 //inline magma_int_t magma_dmalloc_pinned( double **ptr_ptr, size_t n ) { return magma_malloc_pinned( (void**) ptr_ptr, n*sizeof(double)             ); }
 inline magma_int_t magma_dmalloc_pinned( double **ptr_ptr, size_t n ) { return magma_malloc_cpu( (void**) ptr_ptr, n*sizeof(double) ); }
+inline magma_int_t magma_smalloc_pinned( float  **ptr_ptr, size_t n ) { return magma_malloc_cpu( (void**) ptr_ptr, n*sizeof(float)  ); }
 
 inline magma_int_t magma_free_pinned( void* ptr )  { free( ptr ); return MAGMA_SUCCESS; }
 
@@ -233,6 +234,9 @@ magma_queue_destroy(magma_queue_t queue)
   }
 
 
+
+//
+// double
 
 inline
 void
@@ -294,6 +298,63 @@ magma_dsetmatrix(magma_int_t m, magma_int_t n, double const* hA_src, magma_int_t
   check_error( err );
   }
 
+
+
+//
+// float
+
+inline
+void
+magma_sgetmatrix(
+    magma_int_t m, magma_int_t n,
+    magmaFloat_const_ptr dA_src, size_t dA_offset, magma_int_t ldda,
+    float*          hB_dst,                   magma_int_t ldhb,
+    magma_queue_t queue )
+{
+    if (m <= 0 || n <= 0)
+       return;
+
+    size_t buffer_origin[3] = { dA_offset*sizeof(float), 0, 0 };
+    size_t host_orig[3]     = { 0, 0, 0 };
+    size_t region[3]        = { m*sizeof(float), n, 1 };
+    cl_int err = clEnqueueReadBufferRect(
+        queue, dA_src, CL_TRUE,  // blocking
+        buffer_origin, host_orig, region,
+        ldda*sizeof(float), 0,
+        ldhb*sizeof(float), 0,
+        hB_dst, 0, NULL, g_event );
+    check_error( err );
+}
+
+
+
+inline
+void
+magma_ssetmatrix(
+    magma_int_t m, magma_int_t n,
+    float const* hA_src,                   magma_int_t ldha,
+    magmaFloat_ptr    dB_dst, size_t dB_offset, magma_int_t lddb,
+    magma_queue_t queue )
+{
+    if (m <= 0 || n <= 0)
+        return;
+
+    size_t buffer_origin[3] = { dB_offset*sizeof(float), 0, 0 };
+    size_t host_orig[3]     = { 0, 0, 0 };
+    size_t region[3]        = { m*sizeof(float), n, 1 };
+    cl_int err = clEnqueueWriteBufferRect(
+        queue, dB_dst, CL_TRUE,  // blocking
+        buffer_origin, host_orig, region,
+        lddb*sizeof(float), 0,
+        ldha*sizeof(float), 0,
+        hA_src, 0, NULL, g_event );
+    check_error( err );
+}
+
+
+
+//
+// double
 
 inline
 void
@@ -381,6 +442,103 @@ magma_dsetmatrix_async(magma_int_t m, magma_int_t n, double const* hA_src, magma
   clFlush(queue);
   check_error( err );
   }
+
+
+
+
+//
+// float
+
+inline
+void
+magma_sgetmatrix_async(magma_int_t m, magma_int_t n, magmaFloat_const_ptr dA_src, size_t dA_offset, magma_int_t ldda, float* hB_dst, magma_int_t ldhb, magma_queue_t queue, magma_event_t *event)
+  {
+  if (m <= 0 || n <= 0)  { return; }
+
+  size_t buffer_origin[3] = { dA_offset*sizeof(float), 0, 0 };
+  size_t host_orig[3]     = { 0, 0, 0 };
+  size_t region[3]        = { m*sizeof(float), n, 1 };
+  
+  cl_int err = clEnqueueReadBufferRect(
+      queue, dA_src, CL_FALSE,  // non-blocking
+      buffer_origin, host_orig, region,
+      ldda*sizeof(float), 0,
+      ldhb*sizeof(float), 0,
+      hB_dst, 0, NULL, event );
+  
+  clFlush(queue);
+  check_error( err );
+  }
+
+
+inline
+void
+magma_sgetmatrix_async(magma_int_t m, magma_int_t n, magmaFloat_const_ptr dA_src, size_t dA_offset, magma_int_t ldda, float* hB_dst, magma_int_t ldhb, magma_queue_t queue)
+  {
+  if (m <= 0 || n <= 0)  { return; }
+
+  size_t buffer_origin[3] = { dA_offset*sizeof(float), 0, 0 };
+  size_t host_orig[3]     = { 0, 0, 0 };
+  size_t region[3]        = { m*sizeof(float), n, 1 };
+  
+  cl_int err = clEnqueueReadBufferRect(
+      queue, dA_src, CL_FALSE,  // non-blocking
+      buffer_origin, host_orig, region,
+      ldda*sizeof(float), 0,
+      ldhb*sizeof(float), 0,
+      hB_dst, 0, NULL, NULL );
+  
+  clFlush(queue);
+  check_error( err );
+  }
+
+
+inline
+void
+magma_ssetmatrix_async(magma_int_t m, magma_int_t n, float const* hA_src, magma_int_t ldha, magmaFloat_ptr dB_dst, size_t dB_offset, magma_int_t lddb, magma_queue_t queue, magma_event_t *event)
+  {
+  if (m <= 0 || n <= 0)  { return; }
+
+  size_t buffer_origin[3] = { dB_offset*sizeof(float), 0, 0 };
+  size_t host_orig[3]     = { 0, 0, 0 };
+  size_t region[3]        = { m*sizeof(float), n, 1 };
+  
+  cl_int err = clEnqueueWriteBufferRect(
+      queue, dB_dst, CL_FALSE,  // non-blocking
+      buffer_origin, host_orig, region,
+      lddb*sizeof(float), 0,
+      ldha*sizeof(float), 0,
+      hA_src, 0, NULL, event );
+  
+  clFlush(queue);
+  check_error( err );
+  }
+
+
+inline
+void
+magma_ssetmatrix_async(magma_int_t m, magma_int_t n, float const* hA_src, magma_int_t ldha, magmaFloat_ptr dB_dst, size_t dB_offset, magma_int_t lddb, magma_queue_t queue)
+  {
+  if (m <= 0 || n <= 0)  { return; }
+
+  size_t buffer_origin[3] = { dB_offset*sizeof(float), 0, 0 };
+  size_t host_orig[3]     = { 0, 0, 0 };
+  size_t region[3]        = { m*sizeof(float), n, 1 };
+  
+  cl_int err = clEnqueueWriteBufferRect(
+      queue, dB_dst, CL_FALSE,  // non-blocking
+      buffer_origin, host_orig, region,
+      lddb*sizeof(float), 0,
+      ldha*sizeof(float), 0,
+      hA_src, 0, NULL, NULL );
+  
+  clFlush(queue);
+  check_error( err );
+  }
+
+
+
+////////////////////////////////////////////////////////////////////
 
 
 inline
@@ -613,6 +771,10 @@ clblas_diag_const ( magma_diag_t magma_const )
   }
 
 
+
+//
+// gemm
+
 inline
 void
 magma_dgemm
@@ -647,6 +809,39 @@ magma_dgemm
 
 inline
 void
+magma_sgemm(
+    magma_trans_t transA, magma_trans_t transB,
+    magma_int_t m, magma_int_t n, magma_int_t k,
+    float alpha,
+    magmaFloat_const_ptr dA, size_t dA_offset, magma_int_t ldda,
+    magmaFloat_const_ptr dB, size_t dB_offset, magma_int_t lddb,
+    float beta,
+    magmaFloat_ptr       dC, size_t dC_offset, magma_int_t lddc,
+    magma_queue_t queue )
+{
+    if ( m <= 0 || n <= 0 || k <= 0 )
+        return;
+
+    cl_int err = clblasSgemm(
+        clblasColumnMajor,
+        clblas_trans_const( transA ),
+        clblas_trans_const( transB ),
+        m, n, k,
+        alpha, dA, dA_offset, ldda,
+               dB, dB_offset, lddb,
+        beta,  dC, dC_offset, lddc,
+        1, &queue, 0, NULL, g_event );
+    clFlush(queue);
+    check_error( err );
+}
+
+
+
+//
+// syrk
+
+inline
+void
 magma_dsyrk
   (
   magma_uplo_t uplo, magma_trans_t trans,
@@ -671,6 +866,34 @@ magma_dsyrk
   
   coot_check_clblas_error(err, "magma_dsyrk()");
   }
+
+
+inline
+void
+magma_ssyrk(
+    magma_uplo_t uplo, magma_trans_t trans,
+    magma_int_t n, magma_int_t k,
+    float alpha,
+    magmaFloat_const_ptr dA, size_t dA_offset, magma_int_t ldda,
+    float beta,
+    magmaFloat_ptr       dC, size_t dC_offset, magma_int_t lddc,
+    magma_queue_t queue )
+{
+    cl_int err = clblasSsyrk(
+        clblasColumnMajor,
+        clblas_uplo_const( uplo ),
+        clblas_trans_const( trans ),
+        n, k,
+        alpha, dA, dA_offset, ldda,
+        beta,  dC, dC_offset, lddc,
+        1, &queue, 0, NULL, g_event );
+    check_error( err );
+}
+
+
+
+//
+// trsm
 
 
 inline
@@ -706,6 +929,38 @@ magma_dtrsm
 
 inline
 void
+magma_strsm(
+    magma_side_t side, magma_uplo_t uplo, magma_trans_t trans, magma_diag_t diag,
+    magma_int_t m, magma_int_t n,
+    float alpha,
+    magmaFloat_const_ptr dA, size_t dA_offset, magma_int_t ldda,
+    magmaFloat_ptr       dB, size_t dB_offset, magma_int_t lddb,
+    magma_queue_t queue )
+{
+    if (m <= 0 || n <= 0)
+        return;
+
+    cl_int err = clblasStrsm(
+        clblasColumnMajor,
+        clblas_side_const( side ),
+        clblas_uplo_const( uplo ),
+        clblas_trans_const( trans ),
+        clblas_diag_const( diag ),
+        m, n,
+        alpha, dA, dA_offset, ldda,
+               dB, dB_offset, lddb,
+        1, &queue, 0, NULL, g_event );
+    clFlush(queue);
+    check_error( err );
+}
+
+
+
+//
+// trmm
+
+inline
+void
 magma_dtrmm(
     magma_side_t side, magma_uplo_t uplo, magma_trans_t trans, magma_diag_t diag,
     magma_int_t m, magma_int_t n,
@@ -731,6 +986,36 @@ magma_dtrmm(
 }
 
 
+
+inline
+void
+magma_strmm(
+    magma_side_t side, magma_uplo_t uplo, magma_trans_t trans, magma_diag_t diag,
+    magma_int_t m, magma_int_t n,
+    float alpha,
+    magmaFloat_const_ptr dA, size_t dA_offset, magma_int_t ldda,
+    magmaFloat_ptr       dB, size_t dB_offset, magma_int_t lddb,
+    magma_queue_t queue )
+{
+    if (m <= 0 || n <= 0)
+        return;
+
+    cl_int err = clblasStrmm(
+        clblasColumnMajor,
+        clblas_side_const( side ),
+        clblas_uplo_const( uplo ),
+        clblas_trans_const( trans ),
+        clblas_diag_const( diag ),
+        m, n,
+        alpha, dA, dA_offset, ldda,
+               dB, dB_offset, lddb,
+        1, &queue, 0, NULL, g_event );
+    clFlush(queue);
+    check_error( err );
+}
+
+
+
 ////////////////////////////////////////
 
 
@@ -740,3 +1025,8 @@ magma_dtrmm(
 #define MAGMA_D_NEG_ONE           (-1.0)
 #define MAGMA_D_NEG_HALF          (-0.5)
 
+#define MAGMA_S_ZERO              ( 0.0)
+#define MAGMA_S_ONE               ( 1.0)
+#define MAGMA_S_HALF              ( 0.5)
+#define MAGMA_S_NEG_ONE           (-1.0)
+#define MAGMA_S_NEG_HALF          (-0.5)

@@ -17,6 +17,7 @@
 //! @{
 
 
+
 // TODO: add optional 'layout' argument
 template<typename T1>
 inline
@@ -25,7 +26,7 @@ chol(Mat<typename T1::elem_type>& out, const Base<typename T1::elem_type, T1>& X
   {
   coot_extra_debug_sigprint();
   
-    // typedef typename T1::elem_type eT;
+  typedef typename T1::elem_type eT;
   
   coot_debug_check( (coot_rt.is_valid() == false), "coot_rt not valid" );
   
@@ -36,11 +37,33 @@ chol(Mat<typename T1::elem_type>& out, const Base<typename T1::elem_type, T1>& X
   magma_int_t info   = 0;
   magma_int_t status = 0;
   
+  // using MAGMA 2.2
+  
+  // OpenCL uses opaque memory pointers which hide the underlying type,
+  // so we don't need to do template tricks or casting
+  
+  if(is_float<eT>::value)
+    {
+    //std::cout << "using float" << std::endl;
+    status = magma_spotrf_gpu(MagmaUpper, out.n_rows, out.get_dev_mem(), out.n_rows, &info);
+    }
+  else if(is_double<eT>::value)
+    {
+    //std::cout << "using double" << std::endl;
+    status = magma_dpotrf_gpu(MagmaUpper, out.n_rows, out.get_dev_mem(), out.n_rows, &info);
+    }
+  else
+    {
+    coot_debug_check( true, "chol(): not implemented for given type" );
+    }
+  
+  
+  
+  
   //// using MAGMA 1.3
   //status = magma_dpotrf_gpu(MagmaUpper, out.n_rows, out.get_dev_mem(), 0, out.n_rows, coot_rt.get_cq(), &info);
   
-  // using MAGMA 2.2
-  status = magma_dpotrf_gpu(MagmaUpper, out.n_rows, out.get_dev_mem(), out.n_rows, &info);
+  
 
   // TODO: check status
   

@@ -51,18 +51,18 @@
 
 inline
 magma_int_t
-magma_get_dpotrf_nb( magma_int_t m )
+magma_get_spotrf_nb( magma_int_t m )
   {
-  if      (m <= 4256) return 128;
-  else                return 256;
+  if      (m <= 1024) return 128;
+  else                return 320;
   }
 
 
 inline
 magma_int_t
-magma_dpotrf_gpu(
+magma_spotrf_gpu(
     magma_uplo_t uplo, magma_int_t n,
-    magmaDouble_ptr dA, magma_int_t ldda,
+    magmaFloat_ptr dA, magma_int_t ldda,
     magma_int_t *info )
 {
     // #ifdef HAVE_clBLAS
@@ -76,17 +76,17 @@ magma_dpotrf_gpu(
     #define dA(i_, j_)  dA, ((i_) + (j_)*ldda)
     
     /* Constants */
-    const double c_one     = MAGMA_D_ONE;
-    const double c_neg_one = MAGMA_D_NEG_ONE;
-    const double d_one     =  1.0;
-    const double d_neg_one = -1.0;
+    const float c_one     = MAGMA_S_ONE;
+    const float c_neg_one = MAGMA_S_NEG_ONE;
+    const float d_one     =  1.0;
+    const float d_neg_one = -1.0;
     
     /* Local variables */
     const char* uplo_ = lapack_uplo_const( uplo );
     bool upper = (uplo == MagmaUpper);
     
     magma_int_t j, jb, nb;
-    double *work;
+    float *work;
 
     *info = 0;
     if (! upper && uplo != MagmaLower) {
@@ -101,9 +101,9 @@ magma_dpotrf_gpu(
         return *info;
     }
     
-    nb = magma_get_dpotrf_nb( n );
+    nb = magma_get_spotrf_nb( n );
     
-    if (MAGMA_SUCCESS != magma_dmalloc_pinned( &work, nb*nb )) {
+    if (MAGMA_SUCCESS != magma_smalloc_pinned( &work, nb*nb )) {
         *info = MAGMA_ERR_HOST_ALLOC;
         return *info;
     }
@@ -117,14 +117,14 @@ magma_dpotrf_gpu(
     if (nb <= 1 || nb >= n) {
         //std::cout << "using CPU version" << std::endl;
         /* Use unblocked code. */
-        magma_dgetmatrix( n, n, dA(0,0), ldda, work, n, queues[0] );
-               //lapackf77_dpotrf( uplo_, &n, work, &n, info );
-        coot_fortran(coot_dpotrf)( uplo_, &n, work, &n, info );
-        magma_dsetmatrix( n, n, work, n, dA(0,0), ldda, queues[0] );
+        magma_sgetmatrix( n, n, dA(0,0), ldda, work, n, queues[0] );
+               //lapackf77_spotrf( uplo_, &n, work, &n, info );
+        coot_fortran(coot_spotrf)( uplo_, &n, work, &n, info );
+        magma_ssetmatrix( n, n, work, n, dA(0,0), ldda, queues[0] );
     }
     else {
-        //std::cout << "using GPU version" << std::endl;
         /* Use blocked code. */
+        //std::cout << "using GPU version" << std::endl;
         if (upper) {
             //=========================================================
             /* Compute the Cholesky factorization A = U'*U. */
@@ -133,32 +133,32 @@ magma_dpotrf_gpu(
                 // then transfer it to CPU
                 jb = std::min( nb, n-j );
                 if (j > 0) {
-                    magma_dsyrk( MagmaUpper, MagmaConjTrans, jb, j,
-                                 d_neg_one, dA(0, j), ldda,
-                                 d_one,     dA(j, j), ldda, queues[1] );
+                  magma_ssyrk( MagmaUpper, MagmaConjTrans, jb, j,
+                               d_neg_one, dA(0, j), ldda,
+                               d_one,     dA(j, j), ldda, queues[1] );
                 }
                 
                 magma_queue_sync( queues[1] );
-                magma_dgetmatrix_async( jb, jb,
+                magma_sgetmatrix_async( jb, jb,
                                         dA(j, j), ldda,
                                         work,     jb, queues[0] );
                 
                 // apply all previous updates to block row right of diagonal block
                 if (j+jb < n) {
-                    magma_dgemm( MagmaConjTrans, MagmaNoTrans,
+                    magma_sgemm( MagmaConjTrans, MagmaNoTrans,
                                  jb, n-j-jb, j,
                                  c_neg_one, dA(0, j   ), ldda,
                                             dA(0, j+jb), ldda,
                                  c_one,     dA(j, j+jb), ldda, queues[1] );
                 }
                 
-                // simultaneous with above dgemm, transfer diagonal block,
+                // simultaneous with above sgemm, transfer diagonal block,
                 // factor it on CPU, and test for positive definiteness
                 magma_queue_sync( queues[0] );
-                       //lapackf77_dpotrf( MagmaUpperStr, &jb, work, &jb, info );
-                coot_fortran(coot_dpotrf)( MagmaUpperStr, &jb, work, &jb, info );
+                       //lapackf77_spotrf( MagmaUpperStr, &jb, work, &jb, info );
+                coot_fortran(coot_spotrf)( MagmaUpperStr, &jb, work, &jb, info );
                 
-                magma_dsetmatrix_async( jb, jb,
+                magma_ssetmatrix_async( jb, jb,
                                         work,     jb,
                                         dA(j, j), ldda, queues[1] );
                 if (*info != 0) {
@@ -168,7 +168,7 @@ magma_dpotrf_gpu(
                 
                 // apply diagonal block to block row right of diagonal block
                 if (j+jb < n) {
-                    magma_dtrsm( MagmaLeft, MagmaUpper, MagmaConjTrans, MagmaNonUnit,
+                    magma_strsm( MagmaLeft, MagmaUpper, MagmaConjTrans, MagmaNonUnit,
                                  jb, n-j-jb,
                                  c_one, dA(j, j),    ldda,
                                         dA(j, j+jb), ldda, queues[1] );
@@ -183,31 +183,31 @@ magma_dpotrf_gpu(
                 // then transfer it to CPU
                 jb = std::min( nb, n-j );
                 if (j > 0) {
-                    magma_dsyrk( MagmaLower, MagmaNoTrans, jb, j,
+                    magma_ssyrk( MagmaLower, MagmaNoTrans, jb, j,
                                  d_neg_one, dA(j, 0), ldda,
                                  d_one,     dA(j, j), ldda, queues[1] );
                 }
                 
                 magma_queue_sync( queues[1] );
-                magma_dgetmatrix_async( jb, jb,
+                magma_sgetmatrix_async( jb, jb,
                                         dA(j, j), ldda,
                                         work,     jb, queues[0] );
                 
                 // apply all previous updates to block column below diagonal block
                 if (j+jb < n) {
-                    magma_dgemm( MagmaNoTrans, MagmaConjTrans,
+                    magma_sgemm( MagmaNoTrans, MagmaConjTrans,
                                  n-j-jb, jb, j,
                                  c_neg_one, dA(j+jb, 0), ldda,
                                             dA(j,    0), ldda,
                                  c_one,     dA(j+jb, j), ldda, queues[1] );
                 }
                 
-                // simultaneous with above dgemm, transfer diagonal block,
+                // simultaneous with above sgemm, transfer diagonal block,
                 // factor it on CPU, and test for positive definiteness
                 magma_queue_sync( queues[0] );
-                       //lapackf77_dpotrf( MagmaLowerStr, &jb, work, &jb, info );
-                coot_fortran(coot_dpotrf)( MagmaLowerStr, &jb, work, &jb, info );
-                magma_dsetmatrix_async( jb, jb,
+                       //lapackf77_spotrf( MagmaLowerStr, &jb, work, &jb, info );
+                coot_fortran(coot_spotrf)( MagmaLowerStr, &jb, work, &jb, info );
+                magma_ssetmatrix_async( jb, jb,
                                         work,     jb,
                                         dA(j, j), ldda, queues[1] );
                 if (*info != 0) {
@@ -217,7 +217,7 @@ magma_dpotrf_gpu(
                 
                 // apply diagonal block to block column below diagonal
                 if (j+jb < n) {
-                    magma_dtrsm( MagmaRight, MagmaLower, MagmaConjTrans, MagmaNonUnit,
+                    magma_strsm( MagmaRight, MagmaLower, MagmaConjTrans, MagmaNonUnit,
                                  n-j-jb, jb,
                                  c_one, dA(j,    j), ldda,
                                         dA(j+jb, j), ldda, queues[1] );
@@ -234,4 +234,4 @@ magma_dpotrf_gpu(
     return *info;
     
     #undef dA
-} /* magma_dpotrf_gpu */
+} /* magma_spotrf_gpu */

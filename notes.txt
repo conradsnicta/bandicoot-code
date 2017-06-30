@@ -1,10 +1,13 @@
 two use cases:
 (1) as a dedicated library for GPU matrix programming with a subset of Armadillo-like functions.
-(2) as a drop-in accelerator for the Armadillo library, offloading intensive computations to the GPU when possible
-
-
+(2) as a drop-in accelerator for the Armadillo library, offloading intensive computations to the GPU when possible.
 
 TODO
+
+timing results on various GPU cards for a subset of functions
+- single precision
+- double precision
+
 
 investigate use of clBLAS axpy() for simple addition and subtraction of arrays
 

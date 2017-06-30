@@ -108,7 +108,7 @@ magma_dpotrf_gpu(magma_uplo_t uplo, magma_int_t n, magmaDouble_ptr dA, size_t dA
   
   if ((nb <= 1) || (nb >= n))
     {
-    cout << "using CPU version" << endl;
+    //cout << "using CPU version" << endl;
     // TODO: this code is probably unnecessary when using Armadillo to call coot::chol()
     // TODO: otherwise it only makes sense if using bandicoot as a stand-alone library
     
@@ -125,7 +125,7 @@ magma_dpotrf_gpu(magma_uplo_t uplo, magma_int_t n, magmaDouble_ptr dA, size_t dA
     }
   else
     {
-    cout << "using GPU version" << endl;
+    //cout << "using GPU version" << endl;
     
     if ( uplo == MagmaUpper )
       {

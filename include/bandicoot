@@ -26,7 +26,7 @@
 #endif
 
 #if !defined(ARMA_USE_U64S64)
-  #pragma message("WARNING: present installation of Armadillo doesn't have 64 bit integers enabled");
+  #pragma message("WARNING: present installation of Armadillo doesn't have 64 bit integers enabled")
 #endif
 
 
@@ -160,6 +160,7 @@ namespace coot
   
   //
   // magma related
+  // NOTE: magma uses rather dubious coding techniques
   
   //#include "bandicoot_bits/magma13_support.hpp"
   //#include "bandicoot_bits/magma13_dpotrf.hpp"
@@ -170,6 +171,7 @@ namespace coot
   #include "bandicoot_bits/magma22_dgeqrf.hpp"
   
   
+  #include "bandicoot_bits/magma22_spotrf.hpp"
   #include "bandicoot_bits/magma22_dpotrf.hpp"
   
   //

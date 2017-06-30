@@ -1,0 +1,111 @@
+d_chol()
+
+CPU: Xeon E5-2620 v4 @ 2.1 GHz, OpenBLAS 0.2.18
+
+N = 100
+size   time
+ 500   0.228295
+1000   0.820475
+1500   1.58809
+2000   2.62979
+2500   4.51295
+3000   6.74079
+3500   9.17615
+4000   12.825
+4500   17.9348
+5000   21.972
+5500   27.9796
+6000   34.1884
+6500   42.3118
+7000   51.3574
+7500   
+8000   
+
+
+GPU: AMD RX 580
+
+TODO
+
+
+GPU: nvidia GTX 1080 Ti
+
+preliminary!
+- does not take into account setting lower triangle to zero
+- no tuning for block size
+
+N = 100
+size   time
+ 500   0.693341
+1000   1.75909
+1500   3.13962
+2000   3.29624
+2500   5.50346
+3000   7.28038
+3500   10.3043
+4000   12.168
+4500   15.5843
+5000   20.5538
+5500   26.4223
+6000   failed  TODO: why?  
+6500   42.198
+7000   failed  TODO: why?
+7500   
+8000   
+
+
+
+---------------
+
+f_chol()
+
+CPU: Xeon E5-2620 v4 @ 2.1 GHz, OpenBLAS 0.2.18
+
+N = 100
+size   time
+ 500   0.178035
+1000   0.605106
+1500   1.13401
+2000   1.81717
+2500   2.70238
+3000   3.97303
+3500   5.49293
+4000   7.26277
+4500   9.67822
+5000   13.0114 (all decompositions failed)
+5500   16.752  (all decompositions failed)
+6000   19.9364 (all decompositions failed)
+6500   23.8203 (all decompositions failed)
+7000   28.6995 (all decompositions failed)
+7500   33.4883
+8000   23.7999
+
+
+GPU: AMD RX 580
+
+TODO
+
+
+GPU: nvidia GTX 1080 Ti
+
+preliminary!
+- does not take into account setting lower triangle to zero
+- no tuning for block size
+
+N = 100
+size   time
+ 500   0.585836
+1000   1.26726
+1500   2.79607
+2000   4.09509
+2500   4.90886
+3000   6.43237
+3500   7.37654
+4000   9.58682
+4500   13.1234
+5000   12.5798
+5500   14.8818
+6000   16.2299
+6500   19.3479 
+7000   20.8543
+7500   
+8000   
