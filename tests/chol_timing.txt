@@ -24,7 +24,23 @@ size   time
 
 GPU: AMD RX 580
 
-TODO
+ 500   
+1000   
+1500   
+2000   
+2500   
+3000   
+3500   
+4000   
+4500   
+5000   
+5500   
+6000   
+6500   
+7000   
+7500   
+8000   
+
 
 
 GPU: nvidia GTX 1080 Ti
@@ -35,7 +51,7 @@ preliminary!
 
 N = 100
 size   time
- 500   0.693341
+ 500   0.693341  NOTE: these results are unreliable, due to missing clFinish()
 1000   1.75909
 1500   3.13962
 2000   3.29624
@@ -82,7 +98,22 @@ size   time
 
 GPU: AMD RX 580
 
-TODO
+ 500   4.76682
+1000   5.35535
+1500   
+2000   9.22276
+2500   
+3000   13.3321
+3500   
+4000   33.6023
+4500   
+5000   
+5500   
+6000   
+6500   
+7000   
+7500   
+8000   
 
 
 GPU: nvidia GTX 1080 Ti
@@ -93,7 +124,7 @@ preliminary!
 
 N = 100
 size   time
- 500   0.585836
+ 500   0.585836  NOTE: these results are unreliable, due to missing clFinish()
 1000   1.26726
 1500   2.79607
 2000   4.09509
