@@ -3,6 +3,8 @@
 #include <armadillo>
 #include <bandicoot>
 
+#include <unistd.h>
+
 int
 main(int argc, char** argv)
   {
@@ -48,6 +50,8 @@ main(int argc, char** argv)
   std::cout << "----" << std::endl;
   std::cout << std::endl;
   
+  sleep(1);
+
   coot::fmat AA(A);
   coot::fmat BB(B);
   coot::fmat XX(AA.n_rows,BB.n_cols);

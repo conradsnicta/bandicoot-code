@@ -60,6 +60,7 @@ main(int argc, char** argv)
   for(arma::uword i=0; i<N; ++i)
     {
     coot::chol(RR,XX);
+    clFinish(coot::coot_rt.get_cq());
     }
   
   std::cout << "timer2.toc(): " << timer2.toc() << std::endl;
