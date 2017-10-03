@@ -218,13 +218,13 @@ coot_rt_t::internal_init(const bool manual_selection, const uword wanted_platfor
   // setup clBLAS
   
   
-  get_stream_err1().flush();
-  get_stream_err1() << "setup clBLAS: start" << endl;
+  get_cerr_stream().flush();
+  get_cerr_stream() << "setup clBLAS: start" << endl;
   
   cl_int clblas_status = clblasSetup();
   
-  get_stream_err1().flush();
-  get_stream_err1() << "setup clBLAS: end" << endl;
+  get_cerr_stream().flush();
+  get_cerr_stream() << "setup clBLAS: end" << endl;
     
   if(clblas_status != CL_SUCCESS)  { coot_debug_warn("coot_rt: couldn't setup clBLAS"); return false; }
   
@@ -306,8 +306,8 @@ coot_rt_t::search_devices(cl_platform_id& out_plt_id, cl_device_id& out_dev_id, 
       
       if(print_info)
         {
-        get_stream_err1().flush();
-        get_stream_err1() << "platform: " << platform_count << " / device: " << local_device_count << std::endl;
+        get_cerr_stream().flush();
+        get_cerr_stream() << "platform: " << platform_count << " / device: " << local_device_count << std::endl;
         }
       
       coot_rt_dev_info tmp_info;
@@ -318,11 +318,11 @@ coot_rt_t::search_devices(cl_platform_id& out_plt_id, cl_device_id& out_dev_id, 
         {
         if(ok == false)
           {
-          get_stream_err1().flush();
-          get_stream_err1() << "problem with getting info about device" << std::endl;
+          get_cerr_stream().flush();
+          get_cerr_stream() << "problem with getting info about device" << std::endl;
           }
         
-        get_stream_err1() << std::endl;
+        get_cerr_stream() << std::endl;
         }
       
       local_device_pri.at(local_device_count) = 0;
@@ -352,7 +352,7 @@ coot_rt_t::search_devices(cl_platform_id& out_plt_id, cl_device_id& out_dev_id, 
     
     if(print_info)
       {
-      get_stream_err1() << "selected: platform: " << wanted_platform << " / device: " << wanted_device << std::endl;
+      get_cerr_stream() << "selected: platform: " << wanted_platform << " / device: " << wanted_device << std::endl;
       }
     
     out_plt_id = platform_ids.at(wanted_platform);
@@ -398,7 +398,7 @@ coot_rt_t::search_devices(cl_platform_id& out_plt_id, cl_device_id& out_dev_id, 
     {
     if(print_info)
       {
-      get_stream_err1() << "selected: platform: " << best_platform_num << " / device: " << best_device_num << std::endl;
+      get_cerr_stream() << "selected: platform: " << best_platform_num << " / device: " << best_device_num << std::endl;
       }
     
     std::vector<cl_device_id>& local_device_ids = device_ids.at(best_platform_num);
@@ -532,17 +532,17 @@ coot_rt_t::interrogate_device(coot_rt_dev_info& out_info, cl_platform_id in_plt_
   
   if(print_info)
     {
-    get_stream_err1().flush();
-    get_stream_err1() << "name1:       " << dev_name1 << std::endl;
-    get_stream_err1() << "name2:       " << dev_name2 << std::endl;
-    get_stream_err1() << "name3:       " << dev_name3 << std::endl;
-    get_stream_err1() << "is_gpu:      " << (dev_type == CL_DEVICE_TYPE_GPU)  << std::endl;
-    get_stream_err1() << "fp64:        " << dev_fp64 << std::endl;
-    get_stream_err1() << "sizet_width: " << dev_sizet_width  << std::endl;
-    get_stream_err1() << "ptr_width:   " << dev_ptr_width << std::endl;
-    get_stream_err1() << "n_units:     " << dev_n_units << std::endl;
-    get_stream_err1() << "opencl_ver:  " << dev_opencl_ver << std::endl;
-  //get_stream_err1() << "align:       " << dev_align  << std::endl;
+    get_cerr_stream().flush();
+    get_cerr_stream() << "name1:       " << dev_name1 << std::endl;
+    get_cerr_stream() << "name2:       " << dev_name2 << std::endl;
+    get_cerr_stream() << "name3:       " << dev_name3 << std::endl;
+    get_cerr_stream() << "is_gpu:      " << (dev_type == CL_DEVICE_TYPE_GPU)  << std::endl;
+    get_cerr_stream() << "fp64:        " << dev_fp64 << std::endl;
+    get_cerr_stream() << "sizet_width: " << dev_sizet_width  << std::endl;
+    get_cerr_stream() << "ptr_width:   " << dev_ptr_width << std::endl;
+    get_cerr_stream() << "n_units:     " << dev_n_units << std::endl;
+    get_cerr_stream() << "opencl_ver:  " << dev_opencl_ver << std::endl;
+  //get_cerr_stream() << "align:       " << dev_align  << std::endl;
     }
   
   out_info.is_gpu      = (dev_type == CL_DEVICE_TYPE_GPU);
