@@ -65,8 +65,12 @@
 //// This is mainly useful for debugging of the library.
 
 
-#if !defined(COOT_DEFAULT_OSTREAM)
-  #define COOT_DEFAULT_OSTREAM std::cout
+#if !defined(COOT_COUT_STREAM)
+  #define COOT_COUT_STREAM std::cout
+#endif
+
+#if !defined(COOT_CERR_STREAM)
+  #define COOT_CERR_STREAM std::cerr
 #endif
 
 #if !defined(COOT_PRINT_ERRORS)
