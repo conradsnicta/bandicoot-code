@@ -37,7 +37,7 @@ size   time
 4500   14.471
 5000   14.6189    -> approx 2 times faster than CPU
 5500   21.9082
-6000   fail - entire computer crashed!
+6000   12.57      (using RX 580 for compute for W2100 for display ) (previous: fail - entire computer crashed!)
 6500   
 7000   
 7500   
