@@ -8,17 +8,19 @@ main(int argc, char** argv)
   {
   std::cout << coot::coot_version::as_string() << std::endl;
   
-  if(argc < 3)
+  if(argc < 4)
     {
-    std::cout << "usage: size N" << std::endl;
+    std::cout << "usage: size N_cpu N_gpu" << std::endl;
     return -1;
     }
   
-  arma::uword size = atoi(argv[1]);
-  arma::uword N    = atoi(argv[2]);
+  arma::uword size  = atoi(argv[1]);
+  arma::uword N_cpu = atoi(argv[2]);
+  arma::uword N_gpu = atoi(argv[3]);
   
-  std::cout << "size: " << size << std::endl;
-  std::cout << "N:    " << N    << std::endl;
+  std::cout << "size:  " << size  << std::endl;
+  std::cout << "N_cpu: " << N_cpu << std::endl;
+  std::cout << "N_gpu: " << N_gpu << std::endl;
   
   
   //coot::coot_rt.init();
@@ -38,7 +40,7 @@ main(int argc, char** argv)
   
   arma::dmat R;
   
-  for(arma::uword i=0; i<N; ++i)
+  for(arma::uword i=0; i<N_cpu; ++i)
     {
     arma::chol(R,X);
     }
@@ -57,7 +59,7 @@ main(int argc, char** argv)
   
   coot::dmat RR;
   
-  for(arma::uword i=0; i<N; ++i)
+  for(arma::uword i=0; i<N_gpu; ++i)
     {
     coot::chol(RR,XX);
     }

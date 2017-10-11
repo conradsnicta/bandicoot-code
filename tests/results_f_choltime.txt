@@ -22,6 +22,7 @@ size   time
 8000   23.7999
 
 
+*** NOTE: OLD SETUP ***
 GPU: AMD RX 580
 
  500   4.76682
@@ -42,7 +43,8 @@ GPU: AMD RX 580
 8000   
 
 
-GPU: nvidia GTX 1080 Ti
+*** NOTE: OLD SETUP ***
+GPU: nvidia GTX 1080 Ti; clBLAS 2.12 + OpenCL 1.2 via CUDA 8.0
 
 preliminary!
 - does not take into account setting lower triangle to zero
@@ -64,5 +66,32 @@ size   time
 6000   16.2299
 6500   19.3479 
 7000   20.8543
+7500   
+8000   
+
+
+*** NOTE: NEW SETUP W/ SEPERATE DISPLAY ***
+GPU: nvidia GTX 1080 Ti; clBLAS 2.12 + OpenCL 1.2 via CUDA 9.0
+
+preliminary!
+- does not take into account setting lower triangle to zero
+- no tuning for block size
+
+N = 100
+size   time
+ 500   
+1000   
+1500   
+2000   
+2500   
+3000   
+3500   
+4000   
+4500   
+5000   
+5500   
+6000   
+6500    
+7000   
 7500   
 8000   
