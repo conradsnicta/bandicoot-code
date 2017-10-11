@@ -34,13 +34,14 @@ main(int argc, char** argv)
   
   arma::fmat A(size,size, arma::fill::randu); // A -= 0.5;
   arma::fmat X = A*A.t();
+  X.diag() *= 10;
   
   arma::wall_clock timer1;
   timer1.tic();
   
   arma::fmat R;
   
-  for(arma::uword i=0; i<N_cpu; ++i)
+  for(arma::uword i=0; i<N; ++i)
     {
     arma::chol(R,X);
     }
@@ -59,7 +60,7 @@ main(int argc, char** argv)
   
   coot::fmat RR;
   
-  for(arma::uword i=0; i<N_gpu; ++i)
+  for(arma::uword i=0; i<N; ++i)
     {
     coot::chol(RR,XX);
     clFinish(coot::coot_rt.get_cq());
