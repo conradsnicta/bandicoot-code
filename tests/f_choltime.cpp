@@ -41,7 +41,7 @@ main(int argc, char** argv)
   
   arma::fmat R;
   
-  for(arma::uword i=0; i<N; ++i)
+  for(arma::uword i=0; i<N_cpu; ++i)
     {
     arma::chol(R,X);
     }
@@ -60,7 +60,7 @@ main(int argc, char** argv)
   
   coot::fmat RR;
   
-  for(arma::uword i=0; i<N; ++i)
+  for(arma::uword i=0; i<N_gpu; ++i)
     {
     coot::chol(RR,XX);
     clFinish(coot::coot_rt.get_cq());
