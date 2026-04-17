@@ -1,8 +1,8 @@
 * **Bandicoot: C++ GPU library for linear algebra & scientific computing**
 
 * **Git repo moved to GitLab:**  
-[**gitlab.com/conradsnicta/bandicoot-code**](http://gitlab.com/conradsnicta/bandicoot-code)  
-`git clone https://gitlab.com/conradsnicta/bandicoot-code.git`  
+[**gitlab.com/bandicoot-lib/bandicoot-code**](http://gitlab.com/bandicoot-lib/bandicoot-code)  
+`git clone https://gitlab.com/bandicoot-lib/bandicoot-code.git`  
 
 * **Releases:**  
 [**coot.sourceforge.io/download.html**](http://coot.sourceforge.io/download.html)
@@ -14,5 +14,6 @@
 [**coot.sourceforge.io/docs.html**](http://coot.sourceforge.io/docs.html)
 
 * **Related Projects:**
-  - [ensmallen](https://ensmallen.org) - fast non-linear numerical optimisation library
   - [mlpack](https://mlpack.org) - extensive library of machine learning algorithms
+  - [ensmallen](https://ensmallen.org) - fast and flexible numerical optimisation library
+  - [Armadillo](https://arma.sourceforge.net) - C++ CPU library for linear algebra & scientific computing
