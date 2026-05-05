@@ -1,8 +1,5 @@
-* **Bandicoot: C++ GPU library for linear algebra & scientific computing**
-
 * **Git repo moved to GitLab:**  
 [**gitlab.com/bandicoot-lib/bandicoot-code**](http://gitlab.com/bandicoot-lib/bandicoot-code)  
-`git clone https://gitlab.com/bandicoot-lib/bandicoot-code.git`  
 
 * **Releases:**  
 [**coot.sourceforge.io/download.html**](http://coot.sourceforge.io/download.html)
